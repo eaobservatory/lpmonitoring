@@ -13,7 +13,7 @@
 {% for p in LP.PROJECTS %}
   <div class="panel">
     <h2>{{ p.name }}: {{ p.projectid}}<br>{{ p.info }}<br>{{ projdict[p.projectid].allocation }} hrs</h2>
-
+    <div class="warning-parent">
     {% if projdict[p.projectid].number_observations['questionable'] > 0 %}
     <div class="warning">
       {{projdict[p.projectid].number_observations['questionable'] }}
@@ -27,7 +27,7 @@
       {{' %.2F '%  projdict[p.projectid].unconfirmed| float}} hrs unconfirmed for this project.
     </div>
     {% endif %}
-
+    </div>
 
     <div class="panel-small">
       <h4> Allocation</h4>
