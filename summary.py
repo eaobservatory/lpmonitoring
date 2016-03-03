@@ -114,7 +114,7 @@ class LP:
                       'SCUBA-2, RXA3M',
                       'https://www.eaobservatory.org/jcmt/science/large-programs/jingle/',
                       '#F17CB0',
-                      {'SCUBA-2':{2:57,3:123,4:75,5:400},'RXA3':{4:125}})
+                      {'SCUBA-2':{2:57,3:123,4:75},'RXA3':{4:125, 5:400}})
     STUDIES = ProgInfo('M16AL006',
                        'STUDIES',
                        'Ultra deep confusion limited daisy at 450um',
