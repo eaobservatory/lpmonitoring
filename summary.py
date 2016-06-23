@@ -1,4 +1,4 @@
-# Copyright (C) 2015 East Asian Observatory
+# Copyright (C) 2015-2016 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function
 from collections import namedtuple, OrderedDict
 import datetime
+import os
 
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -102,7 +103,7 @@ class LP:
                      '#FAA43A',
                      {'SCUBA-2':{3:150,4:150}})
     GBBFIELD = ProgInfo('M16AL004',
-                        'GBBFIELD',
+                        'BISTRO',
                         'POL-2 observations of dense GBS regions',
                         'SCUBA-2',
                         'https://www.eaobservatory.org/jcmt/science/large-programs/gb_bfields/',
@@ -137,7 +138,8 @@ class LP:
         for i in cls.PROJECTS:
             if i.projectid == code:
                 return i
-        raise Error('Unkown LP project code {0}'.format(code))
+        raise Exception('Unkown LP project code {0}'.format(code))
+
 
 def create_summary(ompdb):
     """
@@ -164,6 +166,7 @@ def create_summary(ompdb):
     faultinfo = ompdb.get_fault_summary('M16AL%')
 
     projdict = {}
+
     for p in LP.PROJECTS:
         # Time charged information
         charged = sum([i.timespent for i in timecharged[p.projectid]]) / (60.0*60.0)
@@ -281,6 +284,26 @@ def prepare_completion_chart(ompdb):
 
     Return sendfile object of mime-type image/png
     """
+
+    # Create matplotlib figure
+    figure = Figure(figsize=(15,5))
+    fig = make_completion_chart(ompdb, figure)
+
+    # Create sendfile object
+    canvas = FigureCanvas(fig)
+    img = StringIO.StringIO()
+    canvas.print_png(img)
+    img.seek(0)
+
+    return send_file(img, mimetype='image/png')
+
+
+
+def make_completion_chart(ompdb, fig):
+    """
+    Create plot showing completion of projects.
+    Return a matplotlib figure
+    """
     ompallocs = ompdb.get_allocation_project('M16AL%', like=True)
     timecharged = get_time_charged(ompdb)
 
@@ -292,7 +315,6 @@ def prepare_completion_chart(ompdb):
     currdate = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
 
     # Set up two plots on one figure.
-    fig = Figure(figsize=(15,5))
     gs = gridspec.GridSpec(1,2, width_ratios=[5,2])
     ax = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -311,7 +333,7 @@ def prepare_completion_chart(ompdb):
                 linewidth=2.0, markeredgewidth=2.0)
 
     # set up plot limits and labels
-    #ax.set_ylim(0,max(100, ax.get_ylim()[1]))
+    ax.set_ylim(0, 100)
     #ax.set_xlim(sdate,edate)
     ax.set_ylabel('Percentage completion')
     fig.patch.set_visible(False)
@@ -319,6 +341,22 @@ def prepare_completion_chart(ompdb):
     ax.tick_params(axis='x', which='minor', bottom='on', top='on')
     ax.xaxis.set_minor_locator(matplotlib.dates.MonthLocator())
     ax.set_title('Completion as of ' + currdate)
+    ax.yaxis.grid()
+
+    # Get times of LAP blocks
+    lapfile = 'LAP-UT-blocks.txt'
+    if os.path.isfile(lapfile):
+        print('found LAP file')
+        f = open('LAP-UT-blocks.txt', 'r')
+        blocks = f.readlines()
+        f.close()
+        blocks = [i.strip() for i in blocks]
+        blocks = [i.split() for i in blocks]
+        for start, end, project in blocks:
+            start = datetime.datetime(int(start[0:4]), int(start[4:6]), int(start[6:8]), 0, 0)
+            end =  datetime.datetime(int(end[0:4]), int(end[4:6]), int(end[6:8]), 23, 59)
+            p = LP.lookup_code(project.upper())
+            ax.axvspan(start, end, alpha=0.25, color=p.color, edgecolor=None)
 
 
     # Set up second plot: bar chart of percentage observed.
@@ -344,14 +382,7 @@ def prepare_completion_chart(ompdb):
     ax2.invert_yaxis()
     fig.set_tight_layout(tight=True)
 
-
-    # Create sendfile object
-    canvas = FigureCanvas(fig)
-    img = StringIO.StringIO()
-    canvas.print_png(img)
-    img.seek(0)
-
-    return send_file(img, mimetype='image/png')
+    return fig
 
 
 
