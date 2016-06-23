@@ -18,13 +18,14 @@
 
 """
 Usage: lp-web.py [-h]
-       lp-web.py [-d]
+       lp-web.py [-d] [--port=<port>]
 
 Starts a web page for monitoring the progress of the JCMT large programs.
 
 Options:
   -h --help  Show this help.
   -d --debug    Run using flasks debug mode. Allows reloading of code.
+  -p, --port=<port>  Select port to run on (defaults to 5000)
 
 
 """
@@ -46,6 +47,12 @@ else:
     host='0.0.0.0'
     debug = None
 
+if '--port' in arguments:
+    port = int(arguments['--port'])
+
+else:
+    port=None
+
 # Start flask app.
 app = web.web_pages()
-app.run(host=host, debug=debug)
+app.run(host=host, debug=debug, port=port)
