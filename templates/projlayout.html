@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{title}}</title>
+    {% block extrahead %}
+    {% endblock %}
+    <link rel="stylesheet" href="/static/layout.css" type="text/css" />
+    <link rel="stylesheet" href="/static/style.css" type="text/css" />
+    <link rel="stylesheet" href="/static/nonprint.css" media="not print" type="text/css" />
+    <link rel="stylesheet" href="/static/example.css" type="text/css" media="not print"/>
+  </head>
+
+  <body>
+    {% block navbar %}
+    {% endblock %}
+
+    {% block content %}
+    {% endblock %}
+
+
+  </body>
+</html>
