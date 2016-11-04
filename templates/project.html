@@ -1,0 +1,113 @@
+{% extends 'projlayout.html' %}
+{% from "macros.html" import render_member_info, render_obs_table, project_navbar, project_summary,
+project_header %}
+
+{% block extrahead %}
+<style type="text/css">
+  {{extracss}}
+  tfoot input, thead input {
+  width: 100%;
+  padding: 3px;
+  box-sizing: border-box;
+  }
+</style>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.css"/>
+     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.js"></script>
+    <script type="text/javascript" src="/static/most.js"></script>
+
+</script>
+{% endblock %}
+
+{% block navbar %}
+{{ project_navbar(projinfo.id)}}
+{% endblock %}
+
+{% block content %}
+
+
+   {{ project_header(projinfo)}}
+
+
+    <!-- Summary info: enabled/disabled, are msbs checked in,
+    allocation, time charged, time on sky (excluding JUNK/BAD), -->
+
+    <div id="completionsummary" >
+      {{ project_summary(projinfo, msbfullinfo, time_in_msbs)}}
+      <p> Warnings: Open Faults. Questionable Data. Reduction errors.</p>
+
+    </div>
+    <div class="clear">
+    </div>
+    <!-- msbs: hrs in database, number of sources. Plot of observability of sources in db?-->
+    <!-- Members: PI, cois who they are, email status and cadc status. -->
+    <div id="members" class="projblock">
+      <a href="http://omp.eao.hawaii.edu/cgi-bin/projusers.pl?urlprojid={{projinfo.id}}">
+        <h4>Member info</h4>
+        </a>
+      {{ render_member_info(projinfo) }}
+    </div>
+
+    <div id="msbsummary" class="projblock">
+
+      <h4>Summary of MSBs in the OMP</h4>
+      {% if msbfullinfo %}
+      <a href="{{url_for('msbchart', projectid=projinfo.id|projenc)}}">
+      <img src="data:image/png;base64,{{msbpng}}" alt="MSB Observability" />
+      </a>
+        <p>The detailed structure of the science program is not shown here.</p>
+      {% for inst in msbresults %}
+      <div id="msb-{{inst}}" class="hideshow">
+        <h5>{{inst}} MSBs present in OMP (Click to show/hide)</h5>
+        </div>
+      <table id="table-msb-{{inst}}" align="center">
+        <thead>
+        <tr><th>MSB</th><th>MSB Title</th><th>Target</th>
+          {% if not 'SCUBA' in inst %}
+          <th>Frequency (GHz)</th>
+          {% endif %}
+          <th>Tau  (min)</th><th>Tau (max)</th><th>Time (mins)</th><th>Reps</th>
+          <th>RA</th><th>Dec</th><th>Priority</th>
+        </tr>
+        </thead>
+        <tbody>
+          {% for m in msbresults[inst]|sort(attribute='priority') %}
+          <tr><td>{{loop.index}}</td><td>{{m.title}}</td><td>{{m.target}}</td>
+          {% if not 'SCUBA' in inst %}
+          <td>{{'%.3F' %(300000/m.wavelength)}}</td>
+          {% endif %}
+          <td>{{'%.2F'%m.taumin}}</td><td>{{'%.2F'%m.taumax}}</td><td>{{'%.1F'% (m.timeest/60.0)}}</td><td>{{m.remaining}}</td>
+          {% if m.coordstype=='RADEC' %}
+            <td>{{m.ra2000|ratostr}}</td><td>{{m.dec2000|dectostr}}</td>
+          {% elif m.coordstype=='PLANET' or m.coordstype=='CAL' or m.target=='TBD' %}
+            <td>{{m.ra2000}}</td><td>{{m.dec2000}}</td>
+          {% else%}
+            <td> {% if not m.ra2000 %} {{m.ra2000}} {% else %}{{'%.2F' % m.ra2000}}{% endif %}</td>
+            <td>{% if not m.dec2000 %} {{m.dec2000}} {% else %}{{'%.2F' % m.dec2000}}{% endif %}</td>
+          {% endif %}
+            <td>{{m.priority}}</td>
+          {% endfor %}
+          </tbody>
+        </table>
+
+      {% endfor %}
+      {% else %}
+      <p> No MSBs were found in the data base </p>
+      {% endif %}
+    </div>
+
+    <!-- <div id="obssummary" class="projblock"> -->
+    <!--   <h4> Observation Summary </h4> -->
+    <!--   <ul> -->
+    <!--     <li>Good: </li> -->
+    <!--   </ul> -->
+    <!-- </div> -->
+
+    {% if obsinfodict %}
+    <div id="allobservations">
+      <h4>Observations</h4>
+
+      {{ render_obs_table(obsinfodict) }}
+    </div>
+    <div class="clear"></div>
+    {% endif %}
+{% endblock %}

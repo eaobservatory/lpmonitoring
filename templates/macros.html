@@ -1,0 +1,226 @@
+{% macro project_navbar(projectid) %}
+<ul id="navbar">
+  <li><a href="/project/{{projectid|projenc}}">{{projectid}}</a></li>
+  <li><a href="/project/{{projectid|projenc}}/observations">Observations</a></li>
+  <li><a href="http://omp.eao.hawaii.edu/cgi-bin/feedback.pl?urlprojid={{projectid}}">
+      Feedback </a></li>
+  <li><a href="http://omp.eao.hawaii.edu/cgi-bin/fbfault.pl?urlprojid={{projectid}}">
+      Faults </a></li>
+  <li><a href="http://omp.eao.hawaii.edu/cgi-bin/msbhist.pl?urlprojid={{projectid}}">
+      MSB History</a></li>
+</ul>
+{% endmacro %}
+
+{% macro project_header(projinfo) %}
+    <header>
+      <p>{{projinfo.title}}</p>
+      <h1>{{projinfo.id}}</h1>
+      {% set completion=100.0*(projinfo.allocated_hours - projinfo.remaining_hours)/projinfo.allocated_hours %}
+      <p>PI: <span class="pi">{{projinfo.pi|join(', ',attribute='uname')}}</span></br>
+        FOP: <span class="fop">{{projinfo.fops|join(', ',attribute='uname')}}</span><br/>
+        <span class="{{projinfo.state|enabled}}" title="{{projinfo.state|enabled}}">{{projinfo.semester}}</span>⚫{{ '%i'% projinfo.allocated_hours}} hrs⚫{{'%.1F' % completion}}%⚫<span style="text-transform:none">τ</span>:{{'%.2F-%.2F' % (projinfo.opacityrange)}}<br>
+      </p>
+    </header>
+
+{% endmacro %}
+
+
+{% macro project_summary(projinfo, msbfullinfo, time_in_msbs) %}
+
+{% set completion=100.0*(projinfo.allocated_hours - projinfo.remaining_hours)/projinfo.allocated_hours %}
+<p> Project is <b>{{projinfo.state|enabled}}</b> in
+semester <b>{{projinfo.semester}}</b> and is <b> {{'%.1F' %
+completion|float}}%</b> complete. MSBs are <b>{% if msbfullinfo and
+msbfullinfo|length > 0 %} present {% else %} not present {% endif
+%}</b> in the database.  It was allocated <b>{{'%.1F' %
+projinfo.allocated_hours|float}} hrs</b> in opacity
+<b>{{'%.2F-%.2F' %(projinfo.opacityrange[0],projinfo.opacityrange[1])}}</b>;
+there are <b>{{'%.1F'% projinfo.remaining_hours|float}} hrs </b>
+remaining.
+There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a total of
+<b>{{'%.1F' % (time_in_msbs/(60.0*60.0))}}</b> hrs including repeats.</p>
+{% endmacro %}
+
+{% macro render_member_info(projinfo) %}
+<table id="membertable" class="membertable">
+  {% for pi in projinfo.pi %}
+  <tr><th>PI</th>
+      <td>{{pi.uname}}</td>
+      {{ pi|contactable|safe }}
+      {{ pi|cadc|safe }}
+  </tr>
+  {% endfor %}
+  {% for fop in projinfo.fops %}
+  <tr><th>Support</th>
+    <td>{{fop.uname}}</td>
+      {{ fop|contactable|safe }}
+      {{ fop|cadc|safe }}
+  </tr>
+  {% endfor %}
+  {% if projinfo.cois|length > 0 %}
+  <tr>
+    <th rowspan="{{projinfo.cois|length}}">CoIs</th>
+    <td>{{projinfo.cois[0].uname }}</td>
+    {{ projinfo.cois[0]|contactable|safe }}
+    {{ projinfo.cois[0]|cadc|safe }}
+  </tr>
+  {% for coi in projinfo.cois[1:] %}
+  <tr><td>{{coi.uname}}</td>
+    {{coi|contactable|safe }}
+    {{coi|cadc|safe}}
+  </tr>
+  {% endfor %}
+  {% endif %}
+</table>
+{% endmacro %}
+
+{% macro formatcomment(comment) %}
+{% if comment.author %}
+<span class="author">{{comment.author}}</span>{% endif %}
+{% if comment.datetime %}<br/>
+<span class="date">{{comment.datetime}}</span>
+{% endif %}
+{% if comment.text is notwhitespace %}<br/><span class="comment">{{comment.text}}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro render_obs_table(obsinfodict, lookupdict) %}
+{% for instrument in obsinfodict %}
+
+<div class="observations hideshow" id="obs-{{instrument|lower}}"/>
+<h5> {{instrument}} observations (click to hide/show)</h5>
+</div>
+<div id="table-obs-{{instrument|lower}}">
+<table id="obs-table-{{instrument|lower}}" cellspacing="0" class="obstable display" style="width:100%; margin:0px; padding:0em;">
+  <thead>
+  <tr>
+    <th class="instrument">Instrument</th>
+    <th>UT&nbsp;Date</th>
+    <th>Scan</th>
+    <th>Source</th>
+    <th>Duration</th>
+    <th>Obs&nbsp;Type</th>
+    {% if 'ACSIS' in instrument %}
+    <th>Snr</th>
+    <th>Molecule</th>
+    <th>Freq. (GHz)</th>
+    <th>Vel. (km/s)</th>
+    <th>Bandwidth</th>
+    {% endif %}
+    <th>Tau</th>
+    <th class="trans">Trans.</th>
+    <th>Status</th>
+    <th class="comment">Comment</th>
+    <th class="preview">Preview</th>
+    <th class="jobs">Jobs</th>
+  </tr>
+  <tr id="filterrow">
+    <th class="instrument">Instrument</th>
+    <th>UT&nbsp;Date</th>
+    <th>Scan</th>
+    <th>Source</th>
+    <th>Duration</th>
+    <th>Obs&nbsp;Type</th>
+    {% if 'ACSIS' in instrument %}
+    <th>Snr</th>
+    <th>Molecule</th>
+    <th>Freq. (GHz)</th>
+    <th>Vel. (km/s)</th>
+    <th>Bandwidth</th>
+    {% endif %}
+    <th>Tau</th>
+    <th class="trans">Trans.</th>
+    <th>Status</th>
+    <th class="comment">Comment</th>
+    <th class="preview">Preview</th>
+    <th class="jobs">Jobs</th>
+  </tr>
+  <tbody>
+  {% for o in obsinfodict[instrument] %}
+  <tr class="het-master {{o.obsid}} {{o.comment.status|ompstatus|lower}}">
+    <td>{{o.instrument}}</td>
+    <td>{{o.time.start}}</td>
+    <td>{{o.obsnum}}</td>
+    <td>{{o.source.name}}</td>
+    <td>{{o.time.duration}}</td>
+    <td>{{o.obstype}}</td>
+    {% if 'ACSIS' in o.instrument %}
+    <td>{{o.hetinfo[0].subsysnr}}</td>
+    <td class="molecule">{{o.hetinfo[0].molecule}} {{o.hetinfo[0].transition}}</td>
+    <td>{{'%.2F' % o.hetinfo[0].restfreq}}</td>
+    <td>{{'%.2F' % o.hetinfo[0].velocity}}</td>
+    <td>{{o.hetinfo[0].bwmode}}</td>
+    {% endif %}
+    <td>{{'%.2F' % o.tau.average|sn}}</td>
+    <td>{{o.transmission|sn}}</td>
+    <td><a href="{{url_for_omp_comment(o.obsid, o.instrument|ompinst, o.obsnum,
+                 o.time.start.strftime('%Y-%m-%d-%H-%M-%S'))}}">{{o.comment.status|ompstatus}}</a></td>
+    <td class="comment">
+      <p>{{ formatcomment(o.comment) }}</p>
+    </td>
+    <td class="preview">
+      {% if  'ACSIS' not in o.instrument %}
+         {% set jobinfo = lookupdict[o.obsid]%}
+         {% if jobinfo %}
+            {% for k in ['450', '850'] %}
+               {% for job, preview in jobinfo[k] %}
+               <div class="s2previews">
+               <a href="http://kamaka:5000/job/{{job.id}}">{{k}}</br><img src="{{url_for('job_preview', job_id=job.id, preview=preview)}}"/></a></div>
+               {% endfor %}
+            {% endfor %}
+         {% endif %}
+      {% else %}
+         {% set jobinfo = lookupdict[o.obsid][o.hetinfo[0].subsysnr] %}
+         {% if jobinfo %}
+         {% for j in jobinfo %}
+            <a href="http://kamaka:5000/job/{{j[0].id}}"> 
+              <img src="{{url_for('job_preview', job_id=j[0].id, preview=j[1])}}"/>
+            </a>
+          {% endfor %}
+         {% endif %}
+      {% endif %}
+    </td>
+    <td>{% set jobinfo = lookupdict[o.obsid] %}{% if jobinfo %}{% for subsys in jobinfo %}{% if 'ACSIS' not in o.instrument %}{{subsys}}: {% endif %}{% for j in jobinfo[subsys] %}<a href="http://kamaka:5000/job{{j[0].id}}">{{j[0].id}}</a> ({{j[0].state|procstatus}})</br>{% endfor %}{% endfor %}{% endif %}</td>
+  </tr>
+  {% if o.hetinfo |length > 1 %}
+  {% for h in o.hetinfo[1:] %}
+  <tr class="het-additional {{o.obsid}} {{o.comment.status|ompstatus|lower}}">
+    <td class="het-additional">{{o.instrument}}</td>
+    <td class="het-additional">{{o.time.start}}</td>
+    <td class="het-additional">{{o.obsnum}}</td>
+    <td class="het-additional">{{o.source.name}}</td>
+    <td class="het-additional">{{o.time.duration}}</td>
+    <td class="het-additional">{{o.obstype}}</td>
+    <td>{{h.subsysnr}}</td>
+    <td class="molecule">{{h.molecule}} {{h.transition}}</td>
+    <td>{{'%.2F' % h.restfreq}}</td>
+    <td>{{'%.2F' % h.velocity}}</td>
+    <td>{{h.bwmode}}</td>
+    <td class="het-additional">{{'%.2F' % o.tau.average|sn}}</td>
+    <td class="het-additional">{{o.transmission|sn}}</td>
+    <td class="het-additional">{{o.comment.status|ompstatus}}</td>
+    <td class="het-additional comment">
+       <p>{{ formatcomment(o.comment) }}</p>
+    </td>
+    <td class="preview">
+      {% set jobinfo = lookupdict[o.obsid][h.subsysnr]%}
+         {% if jobinfo %}
+         {% for j in jobinfo %}<a href="http://kamaka:5000/job/{{j[0].id}}"><!-- JOB {{j[0].id}} ({{j[0].state|procstatus}})</br>!--><img src="{{url_for('job_preview', job_id=j[0].id, preview=j[1])}}"/></a>{% endfor %}{% endif %}
+    </td>
+    <td><!--
+      !--> {% set jobinfo = lookupdict[o.obsid] %}<!--
+      !-->{% if jobinfo %}<!--
+        !-->{% for subsys in jobinfo %}{% if 'ACSIS' not in o.instrument %}{{subsys}}:{% endif %}{% for j in jobinfo[subsys] %}<a href="http://kamaka:5000/job{{j[0].id}}">{{j[0].id}}</a> ({{j[0].state|procstatus}})</br>{% endfor %}{% endfor %}{% endif %}</td>
+
+  </tr>
+   {% endfor %}
+  {% endif %}
+  {% endfor %}
+ </tbody>
+</table>
+</div>
+{% endfor %}
+
+{% endmacro %}
+
+

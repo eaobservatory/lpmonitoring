@@ -1,23 +1,23 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+
+  <h1> JCMT Large Program Monitoring </h1>
 <div class="panel">
 <img src={{ url_for('completion_chart')}} />
-
-<p>
-<span class="TODO">predictions</span>
-</p>
-
 </div>
 
 {% for p in LP.PROJECTS %}
   <div class="panel">
-    <h2>{{ p.name }}: {{ p.projectid}}<br>{{ p.info }}<br>{{ projdict[p.projectid].allocation }} hrs</h2>
+    <a href="/project/{{p.projectid}}">
+      <h2>{{ p.name }}: {{ p.projectid}} ({{ projdict[p.projectid].allocation }} hrs)</h2>
+    </a>
     <div class="warning-parent">
     {% if projdict[p.projectid].number_observations['questionable'] > 0 %}
     <div class="warning">
-      {{projdict[p.projectid].number_observations['questionable'] }}
-      QUESTIONABLE observations waiting to be resolved!
+      <a href="/project/{{p.projectid}}/observations?ompstatus=questionable">
+        {{projdict[p.projectid].number_observations['questionable'] }}
+      QUESTIONABLE observations waiting to be resolved!</a>
       <br>
       Please resolve then recharge time & reset MSBs as appropriate.
     </div>
@@ -116,7 +116,7 @@
       <p><a href="http://omp.eao.hawaii.edu/cgi-bin/fbfault.pl?urlprojid={{ p.projectid }}"> {{ projdict[p.projectid].faults.numopen }} Open/{{ projdict[p.projectid].faults.total }} Faults</a></p>
       <p><a href="http://kamaka:5000/job?project={{ p.projectid }}&mode=JSAQA&number=1000"> Nightly Reductions</a></p>
     </div>
-
+    </br>
     {% if projdict[p.projectid].summary |length > 0 %}
     <div class="panel-small">
       <h4> Weather band completion </h4>
@@ -127,4 +127,5 @@
 
 
 {% endfor %}
+
 {% endblock %}

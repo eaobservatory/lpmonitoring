@@ -176,6 +176,7 @@ div.panel {
     color: black;
     text-align: left;
     border-radius: 8px;
+    display: inline-block;
 }
 
 div.warning{

@@ -3,16 +3,17 @@
 
 <html lang="en">
     <head>
+      <meta charset="utf-8" />
         <title>JCMT LP Monitor: {{ title }}</title>
         <link rel="stylesheet" href="/static/lpmonitoring.css" type="text/css"/>
     </head>
     <body>
-      <div id="content">
-        <h1> JCMT Large Program Monitoring </h1>
-        {% block content %}
+      {% block navbar %}
+      {% endblock %}
+      {% block content %}
+      {% endblock %}
 
-        {% endblock %}
-      </div>
+
 
     </body>
 </html>

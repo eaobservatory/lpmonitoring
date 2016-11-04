@@ -1,0 +1,404 @@
+body {
+    font-family: serif;
+    font-size: 12pt;
+}
+
+h1 {
+    text-align: center;
+}
+
+h2.subtitle {
+    text-align: center;
+}
+
+a:link, a:visited {
+    color: #00F;
+    text-decoration: underline;
+}
+
+a:link abbr, a:visited abbr {
+    color: #00F;
+    text-decoration: underline;
+}
+
+a.undecorated:link, a.undecorated:visited {
+    text-decoration: none;
+}
+
+abbr {
+    color: #040;
+    text-decoration: none;
+    border: none;
+}
+
+#navbar {
+    background: #040;
+    color: #AAA;
+}
+
+#navbar a:link, #navbar a:visited {
+    color: #FFF;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#navbar a:hover {
+    text-shadow: 0px 0px 10px white;
+}
+
+nav:first-child ul.navlink {
+    border-bottom: 1px solid #AAA;
+    margin-bottom: 4ex;
+}
+
+nav:not(:first-child) ul.navlink {
+    border-top: 1px solid #AAA;
+    margin-top: 4ex;
+}
+
+table {
+    border-collapse: collapse;
+    background:white;
+}
+
+td, th {
+    border: 1px solid #AAA;
+    padding: 5px;
+    text-align: left;
+    vertical-align: top;
+}
+
+td {
+/*    background: white;*/
+}
+
+th, td.total {
+    font-weight: bold;
+    background: #DDD;
+}
+
+td.grandtotal {
+    background: #BBB;
+    font-weight: bold;
+}
+
+td.borderless {
+    border: none;
+}
+
+tr.spacer_above td, tr.spacer_above th {
+    border-top: 5px solid #AAA;
+}
+
+td.spacer_left, th.spacer_left {
+    border-left: 5px solid #AAA;
+}
+
+td.number_right {
+    text-align: right;
+}
+
+tr.decision_accept > td {
+    background: #BFB;
+}
+
+tr.decision_reject > td {
+    background: #FBB;
+}
+
+tr.decision_exempt > td.cell_affiliation {
+    color: #888;
+}
+
+td.reviewer_tech {
+    background: #EEE;
+}
+
+td.reviewer_ext {
+    background: #DDD;
+}
+
+td.reviewer_cttee {
+    background: #CCC;
+}
+
+td.reviewer_feedback {
+    background: #BBB;
+}
+
+td.review_done {
+    background: #FFF;
+}
+
+td.review_not_done {
+    background: #FFA;
+}
+
+td.no_change {
+    color: #888;
+}
+
+p.warning {
+    font-weight: bold;
+    background: #FAA;
+    color: black;
+    padding: 1ex;
+    border-radius: 1ex;
+}
+
+p.missing {
+    font-style: italic;
+    background: #FFA;
+    color: black;
+    padding: 1ex;
+    border-radius: 1ex;
+}
+
+p.not_present {
+    font-style: italic;
+    color: #888;
+}
+
+p.caution {
+    font-weight: bold;
+}
+
+p.caution:before {
+    color: #F00;
+    content: "CAUTION:";
+}
+
+p.caution + *.caution_detail {
+    margin-top: -1ex;
+}
+
+input[type="number"] {
+    width: 15ex;
+}
+
+input[type="number"].narrow_number {
+    width: 10ex;
+}
+
+section.deselected {
+    border-left: 1ex solid #BBB;
+    padding-left: 1ex;
+}
+
+section.deselected > *:not(.caution) {
+    opacity: 0.5;
+}
+
+p.section_label {
+    font-variant: small-caps;
+    color: #888;
+}
+
+p.section_label + section {
+    margin-left: 3ex;
+}
+
+p.progress {
+    font-style: italic;
+    text-align: center;
+}
+
+span.missing_data {
+    font-style: italic;
+    color: #888;
+}
+
+span.missing_data:before {
+    content: "(";
+}
+
+span.missing_data:after {
+    content: ")";
+}
+
+span.forminfo_ok {
+    background: #8F8;
+    color: #000;
+    border-radius: 1ex;
+    padding-left: 1ex;
+    padding-right: 1ex;
+}
+
+span.forminfo_bad {
+    background: #F00;
+    color: #FFF;
+    border-radius: 1ex;
+    padding-left: 1ex;
+    padding-right: 1ex;
+}
+
+span.calculator_value {
+    display: inline-block;
+    height: 2.5ex;
+    margin: 0.25ex;
+    padding: 0px;
+    border: 1px solid #AAA;
+}
+
+span.calculator_value span.calc_val_name {
+    display: inline-block;
+    height: 100%;
+    font-weight: bold;
+    background: #DDD;
+    padding: 0ex 0.5ex 0ex 0.5ex;
+    margin: 0px;
+}
+
+span.calculator_value span.calc_val_name:not(:last-child) {
+    border-right: 1px solid #AAA;
+}
+
+span.calculator_value span.calc_val_value {
+    display: inline-block;
+    height: 100%;
+    padding: 0ex 0.5ex 0ex 0.5ex;
+    margin: 0px;
+}
+
+form ol li div.explanation {
+    margin-left: 205px;
+    color: #888;
+}
+
+form ol li span.explanation {
+    font-style: italic;
+    color: #888;
+}
+
+form ol li span.explanation:before {
+    content: "(";
+}
+
+form ol li span.explanation:after {
+    content: ")";
+}
+
+input:disabled + span.checkboxlabel {
+    opacity: 0.5;
+}
+
+label.for_disabled {
+    opacity: 0.5;
+}
+
+li.separator {
+    font-variant: small-caps;
+    color: #888;
+    padding-bottom: 1ex;
+}
+
+li.separator:not(:first-child) {
+    padding-top: 3ex;
+}
+
+figure {
+    text-align: center;
+}
+
+figure a img {
+    cursor: zoom-in;
+}
+
+figcaption div.fignum {
+    display: inline-block;
+    vertical-align: top;
+}
+
+figcaption div.figcap {
+    display: inline-block;
+    vertical-align: top;
+    width: 50%;
+    text-align: left;
+}
+
+dt {
+    font-weight: bold;
+}
+
+div.rst_doc img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div.rst_doc div.formula {
+    text-align: center;
+}
+
+.highlight_for_doc {
+    outline: 10px solid red;
+}
+
+.valid_message li p.valid_error {
+    background: red;
+    color: white;
+    border-radius: 0.5ex;
+}
+
+.valid_message li p.valid_warning {
+    background: yellow;
+    border-radius: 0.5ex;
+}
+
+div#facilities a span {
+    text-decoration: underline;
+}
+
+a.create_proposal_link {
+    font-weight: bold;
+}
+
+a.create_proposal_link:before {
+    content: '+';
+    display: inline-block;
+    background: #080;
+    color: #FFF;
+    width: 3ex;
+    font-weight: normal;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}
+
+a#submit_proposal_link {
+    font-weight: bold;
+}
+
+a#submit_proposal_link:before {
+    content: '\2794';
+    display: inline-block;
+    background: #080;
+    color: #FFF;
+    width: 3ex;
+    font-weight: normal;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}
+
+a#withdraw_proposal_link:before {
+    content: '\00D7';
+    display: inline-block;
+    background: #C00;
+    color: #FFF;
+    width: 3ex;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}
+
+a#validate_proposal_link:before {
+    content: '\2714';
+    display: inline-block;
+    background: #DB0;
+    color: #FFF;
+    width: 3ex;
+    text-align: center;
+    border-radius: 1ex;
+    margin-right: 0.5ex;
+}

@@ -26,6 +26,7 @@ from matplotlib.figure import Figure
 from matplotlib import gridspec
 import numpy as np
 import StringIO
+from io import BytesIO
 
 from flask import send_file
 from omp.db.db import OMPDB
@@ -294,8 +295,8 @@ def prepare_completion_chart(ompdb):
     img = StringIO.StringIO()
     canvas.print_png(img)
     img.seek(0)
-
     return send_file(img, mimetype='image/png')
+
 
 
 
@@ -391,17 +392,23 @@ def prepare_project_chart(project, summary):
     """
     Create chart for project obs.
     """
-    pinfo = LP.lookup_code(project)
+    try:
+        pinfo = LP.lookup_code(project)
+    except:
+        pinfo = None
+
     # Number of charts
     instruments = list(set([i.instrument for i in summary]))
 
+    figsize = (5*len(instruments), 5)
+
     # Set up chart on one figure.
-    fig = Figure(figsize=(15,5))
+    fig = Figure(figsize=figsize)
 
     # Go through each instrument.
     for instno in range(len(instruments)):
         instrument = instruments[instno]
-        ax = fig.add_subplot(1, 3, instno+1)
+        ax = fig.add_subplot(1, len(instruments), instno+1)
         data = [i for i in summary if i.instrument == instrument]
         gooddata = 5*[0]
         questdata = 5*[0]
@@ -410,9 +417,12 @@ def prepare_project_chart(project, summary):
             gooddata[b] = sum([i.totaltime/(60*60.0) if (int(i.band)==band)&(i.status==OMPState.GOOD) else 0.0 for i in data ])
             questdata[b] = sum([i.totaltime/(60*60.0) if (int(i.band)==band)&(i.status==OMPState.QUESTIONABLE) else 0.0 for i in data ])
 
+        if pinfo:
+            color = pinfo.color
+        else:
+            color = None
         ax.bar([i+0.05 for i in range(0,5)],
-                gooddata,
-                color = LP.lookup_code(project).color,
+               gooddata, color=color,
                 edgecolor='white', width=0.9)
         ax.bar([i+0.05 for i in range(0,5)],
                 questdata,
@@ -428,24 +438,25 @@ def prepare_project_chart(project, summary):
 
         ax.set_xticklabels(xlabels, weight='bold')
 
-
-        for i in range(0,5):
-            allocation = pinfo.allocdict.get(instrument, {}).get(i+1,0)
-            label = '%.1f' %(gooddata[i])
-            if questdata[i] != 0:
-                label += ' G \n %.1F Q \n' %(questdata[i])
-            else:
-                label += '\n'
-            label += ' /%i hr' % allocation
-            if allocation > 0:
-                label += '\n'
-                label += '%.1f' %(100.0*(gooddata[i] + questdata[i])/allocation)
-                label += '%'
-            ax.text(i+0.5, 3, label,
-                    color='black', ha='center', alpha=1.0, va='bottom', weight='bold', rotation='horizontal')
+        if pinfo:
+            for i in range(0,5):
+                allocation = pinfo.allocdict.get(instrument, {}).get(i+1,0)
+                label = '%.1f' %(gooddata[i])
+                if questdata[i] != 0:
+                    label += ' G \n %.1F Q \n' %(questdata[i])
+                else:
+                    label += '\n'
+                label += ' /%i hr' % allocation
+                if allocation > 0:
+                    label += '\n'
+                    label += '%.1f' %(100.0*(gooddata[i] + questdata[i])/allocation)
+                    label += '%'
+                ax.text(i+0.5, 3, label,
+                        color='black', ha='center', alpha=1.0, va='bottom', weight='bold', rotation='horizontal')
 
         #ax.set_ylim(0, max(ax.get_xlim()[1], max(pinfo.allocdict.get(instrument,{0:0}).values())))
-        ax.set_title(instrument, weight='bold')
+        ax.set_title('{}: {:.1F} hrs observations on sky'.format(instrument, sum(gooddata) + sum(questdata))
+                     , weight='bold')
         ax.set_ylabel('Hrs on sky')
 
     fig.patch.set_visible(False)
@@ -456,5 +467,5 @@ def prepare_project_chart(project, summary):
     img = StringIO.StringIO()
     canvas.print_png(img)
     img.seek(0)
-
     return send_file(img, mimetype='image/png')
+

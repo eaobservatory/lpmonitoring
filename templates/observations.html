@@ -1,0 +1,40 @@
+{% extends 'projlayout.html' %}
+{% from "macros.html" import render_member_info, project_navbar, project_summary,
+project_header %}
+{% from "macros.html" import render_obs_table with context %}
+
+{% block extrahead %}
+<style type="text/css">
+  {{extracss}}
+  tfoot input, thead input {
+  width: 100%;
+  padding: 3px;
+  box-sizing: border-box;
+  }
+</style>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.css"/>
+     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.js"></script>
+    <script type="text/javascript" src="/static/most.js"></script>
+
+</script>
+{% endblock %}
+
+{% block navbar %}
+{{ project_navbar(projinfo.id)}}
+{% endblock %}
+
+{% block content %}
+  {{ project_header(projinfo)}}
+
+    <div class="clear"></div>
+    {% if obsinfodict %}
+    <div id="allobservations" class="projblock">
+      <h4>{% if ompstatus %}{{ompstatus|ompstatus}} {% endif %}Observations {% if utdatestart %} from {{utdatestart}} {% endif %} {% if utdateend %} until {{utdateend}} {% endif %}</h4>
+      {{ render_obs_table(obsinfodict, lookupdict) }}
+    </div>
+    <div class="clear"></div>
+    {% else %}
+    <h4> No {{int(ompstatus)|ompstatus}} observations found for this project
+      {% if utdatestart %} from {{utdatestart}} {% endif %} {% if utdateend %} until {{utdateend}} {% endif %} </h4>
+    {% endif %}
+{% endblock %}
