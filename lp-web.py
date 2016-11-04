@@ -43,6 +43,7 @@ arguments = docopt(__doc__, help=True)
 if arguments['--debug'] is True:
     host = '127.0.0.1'
     debug = True
+
 else:
     host='0.0.0.0'
     debug = None
@@ -55,4 +56,4 @@ else:
 
 # Start flask app.
 app = web.web_pages()
-app.run(host=host, debug=debug, port=port)
+app.run(host=host, debug=debug, port=port, use_reloader=debug)
