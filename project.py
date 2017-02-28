@@ -54,7 +54,7 @@ Transmission = namedtuple('Tranmission',
 Comment = namedtuple('Comment',
                      'status text author datetime')
 HetInfo = namedtuple('HetInfo',
-                     'restfreq molecule transition velocity velosys bwmode subsysnr')
+                     'restfreq molecule transition velocity velosys bwmode subsysnr obsidss')
 
 JobInfo = namedtuple('JobInfo',
                      'job_id obsid obsidss state preview')
@@ -110,10 +110,16 @@ def create_obsinfo(obsinfo, acsisinfo, procjobs, jsaprocdb):
     # Get acsis jobs if relevant
     acsis_lookupdict = {}
     for a in acsisinfo:
+
         match1 = 'jcmt_{}'.format(a.obsid.lower())
         match2 = '{}_preview_64.png'.format(a.subsysnr)
+
         info = [(j, i) for j in procjobs if j.outputs is not None for i in j.outputs if i.startswith(match1) and i.endswith(match2)]
-        acsis_lookupdict[a.obsid] = {a.subsysnr: info}
+
+        if not a.obsid in acsis_lookupdict:
+            acsis_lookupdict[a.obsid] = {a.subsysnr: info}
+        else:
+            acsis_lookupdict[a.obsid][a.subsysnr] = info
 
     for o in aobsids:
         acsis[o] = [a for a in acsisinfo if a.obsid==o]
@@ -136,11 +142,12 @@ def create_obsinfo(obsinfo, acsisinfo, procjobs, jsaprocdb):
         hetinfos = []
         if o.backend=='ACSIS':
             for a in acsis[o.obsid]:
+                obsidss = o.obsid + '_' + str(a.subsysnr)
                 hetinfos.append(HetInfo(a.restfreq, a.molecule, a.transition,
                                         a.zsource*3e8*1e-3,
-                                        a.doppler, a.bwmode, a.subsysnr))
+                                        a.doppler, a.bwmode, a.subsysnr, obsidss))
             hetinfos.sort(key=lambda x: x.subsysnr)
-            print(hetinfos)
+
 
         output.append(ObsInfo(o.obsid, o.obsnum, get_instrument(o), o.project, time,
                               get_obstype(o), source, tau, None,
@@ -165,6 +172,7 @@ def get_previews_for_observation_from_job(obsid, acsisvals, job_id):
         allpreview = [a for a in outputs if a.endswith('64.png')]
 
         preview = [a for a in allpreview if a.startswith('jcmt_{}'.format(obsid.lower())) and 'reduced' in a]
+
     except:
         preview = None
     return preview
@@ -187,7 +195,7 @@ def prepare_observation_page(ompdb, jsaprocdb, projectid, utdatestart=None, utda
 
     obsinfo = ompdb.get_observations(projectid, utdatestart=utdatestart,
                                      utdateend=utdateend, ompstatus=ompstatus)
-    
+
     procjobs = jsaprocdb.find_jobs(task=['jcmt-nightly'], obsquery={'project': projectid},
                                    outputs='jcmt\_%\_0%\_%\_reduced-%64.png')
 
@@ -204,6 +212,8 @@ def prepare_observation_page(ompdb, jsaprocdb, projectid, utdatestart=None, utda
     else:
         obsinfodict={}
         extracss = ''
+        lookupdict={}
+
     return render_template('observations.html', projinfo=projinfo,
                            title=projectid, obsinfodict=obsinfodict, ompstatus=ompstatus,
                            utdatestart=utdatestart, utdateend=utdateend,
@@ -282,7 +292,7 @@ def prepare_project_page(ompdb, jsaprocdb, projectid, observations=False):
     msbpng = base64.b64encode(msbimg.getvalue())
     ctime = datetime.datetime.now()
     print('Figures time {}'.format((ctime - otime2).total_seconds()))
-
+ 
     return render_template('project.html', title=title,projinfo=projinfo, obsinfodict=obsinfodict,
                            msbfullinfo=msbfullinfo, time_in_msbs=time_in_msbs,
                            completion_percentage=completion_percentage, extracss=extracss,

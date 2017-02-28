@@ -158,29 +158,53 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
     <td class="comment">
       <p>{{ formatcomment(o.comment) }}</p>
     </td>
-    <td class="preview">
       {% if  'ACSIS' not in o.instrument %}
          {% set jobinfo = lookupdict[o.obsid]%}
          {% if jobinfo %}
+    <td class="preview">
             {% for k in ['450', '850'] %}
                {% for job, preview in jobinfo[k] %}
-               <div class="s2previews">
-               <a href="http://kamaka:5000/job/{{job.id}}">{{k}}</br><img src="{{url_for('job_preview', job_id=job.id, preview=preview)}}"/></a></div>
+               <div class="s2previews"><a href="http://kamaka:5000/job/{{job.id}}">{{k}}</br><img src="{{url_for('job_preview', job_id=job.id, preview=preview)}}"/></a></div>
                {% endfor %}
             {% endfor %}
+               </td>
+          {% else %}
+               <td></td>
          {% endif %}
       {% else %}
          {% set jobinfo = lookupdict[o.obsid][o.hetinfo[0].subsysnr] %}
          {% if jobinfo %}
          {% for j in jobinfo %}
-            <a href="http://kamaka:5000/job/{{j[0].id}}"> 
-              <img src="{{url_for('job_preview', job_id=j[0].id, preview=j[1])}}"/>
-            </a>
+            <td class="preview"><a href="http://kamaka:5000/job/{{j[0].id}}"><img src="{{url_for('job_preview', job_id=j[0].id, preview=j[1])}}"/></a></td>
           {% endfor %}
+         {% else %}
+            <td></td>
          {% endif %}
+
       {% endif %}
-    </td>
-    <td>{% set jobinfo = lookupdict[o.obsid] %}{% if jobinfo %}{% for subsys in jobinfo %}{% if 'ACSIS' not in o.instrument %}{{subsys}}: {% endif %}{% for j in jobinfo[subsys] %}<a href="http://kamaka:5000/job{{j[0].id}}">{{j[0].id}}</a> ({{j[0].state|procstatus}})</br>{% endfor %}{% endfor %}{% endif %}</td>
+
+      {% if 'ACSIS' not in o.instrument %}
+      {% set jobinfo = lookupdict[o.obsid] %}
+            {% if jobinfo %}
+                <td style="white-space:nowrap">{% for subsys in jobinfo %}
+                   {% for j in jobinfo[subsys] %}
+      <div class="s2previews">{{subsys}}:<br/><a href="http://kamaka:5000/job/{{j[0].id}}">{{j[0].id}}</a><br/>({{j[0].state|procstatus}})</div>
+                   {% endfor %}
+                  {% endfor %}
+                   </td>
+           {% else %}
+      <td></td>
+           {% endif %}
+
+      {% else %}
+      {% set jobinfo = lookupdict[o.obsid][o.hetinfo[0].subsysnr] %}
+          {% if jobinfo %}
+      <td><a href="http://kamaka:5000/job/{{jobinfo[0][0].id}}">{{jobinfo[0][0].id}}</a> ({{jobinfo[0][0].state|procstatus}})</td>
+          {% else %}
+          <td></td>
+          {% endif %}
+      {% endif %}
+
   </tr>
   {% if o.hetinfo |length > 1 %}
   {% for h in o.hetinfo[1:] %}
@@ -208,9 +232,9 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
          {% for j in jobinfo %}<a href="http://kamaka:5000/job/{{j[0].id}}"><!-- JOB {{j[0].id}} ({{j[0].state|procstatus}})</br>!--><img src="{{url_for('job_preview', job_id=j[0].id, preview=j[1])}}"/></a>{% endfor %}{% endif %}
     </td>
     <td><!--
-      !--> {% set jobinfo = lookupdict[o.obsid] %}<!--
+      !--> {% set jobinfo = lookupdict[o.obsid][h.subsysnr] %}<!--
       !-->{% if jobinfo %}<!--
-        !-->{% for subsys in jobinfo %}{% if 'ACSIS' not in o.instrument %}{{subsys}}:{% endif %}{% for j in jobinfo[subsys] %}<a href="http://kamaka:5000/job{{j[0].id}}">{{j[0].id}}</a> ({{j[0].state|procstatus}})</br>{% endfor %}{% endfor %}{% endif %}</td>
+        !--><a href="http://kamaka:5000/job/{{jobinfo[0][0].id}}">{{jobinfo[0][0].id}}</a> ({{jobinfo[0][0].state|procstatus}})</br>{% endif %}</td>
 
   </tr>
    {% endfor %}
