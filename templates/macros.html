@@ -109,8 +109,8 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
     {% endif %}
     <th>Tau</th>
     <th class="trans">Trans.</th>
-    <th>Status</th>
-    <th class="comment">Comment</th>
+    <th>OMP Status</th>
+    <th class="comment">OMP Comment</th>
     <th class="preview">Preview</th>
     <th class="jobs">Jobs</th>
   </tr>
@@ -248,3 +248,15 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
 {% endmacro %}
 
 
+{% macro fop_form(fopompid=None, semester=None) %}
+<div>
+<h2> Summary of OMP projects by FOP & Semester </h2>
+<form method="POST" action="{{url_for('fop_summary_getres')}}">
+  <label for="fopompid">OMP Userid (any case)</label>
+  <input type="text" name="fopompid" value="{% if fopompid %}{{fopompid}}{% endif %}"><br/>
+  <label for="semester">Semester (any case)</label>
+  <input type="text" name="semester" value="{% if semester %}{{semester}}{% endif %}"><br/>
+  <input type="submit" value="Get Summary"/>
+</form>
+</div>
+{% endmacro %}

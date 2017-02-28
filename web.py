@@ -90,13 +90,14 @@ def web_pages():
         if semstart:
             semstart = datetime.datetime.strptime(semstart, '%Y-%m-%d').date()
         else:
-            semstart = datetime.datetime.strptime('2016-08-01', '%Y-%m-%d').date()
+            semstart = datetime.datetime.now().date()
+            #semstart = datetime.datetime.strptime('2016-08-01', '%Y-%m-%d').date()
 
         semend = request.args.get('semend', None)
         if semend:
             semend = datetime.datetime.strptime(semend, '%Y-%m-%d').date()
         else:
-            semend = datetime.datetime.strptime('2017-02-01', '%Y-%m-%d').date()
+            semend = semstart + datetime.timedelta(days=6*31)
         fig = create_msb_image(msbs, utdate, (semstart, semend))
         canvas = FigureCanvas(fig)
         img = StringIO.StringIO()
@@ -122,6 +123,39 @@ def web_pages():
         summary = ompdb.get_summary_obs_info(str(projectid))
         return prepare_project_chart(projectid, summary)
 
+    @app.route('/fop')
+    def fop():
+        return render_template('fop-form.html')
+
+    @app.route('/fop_summary_getres', methods=['POST'])
+    def fop_summary_getres():
+        fopompid = request.form['fopompid']
+        semester = request.form['semester']
+        return redirect(url_for('fop_listing', fopuname=fopompid, semester=semester))
+
+
+    @app.route('/fop/<fopuname>/<semester>')
+    def fop_listing(fopuname, semester):
+        fopuname = str(fopuname).upper()
+        semester = str(semester).upper()
+        projects = ompdb.get_support_projects('', fopuname, semester)
+        summarydict = {}
+        for p in projects:
+            projinfo = ompdb.get_project_info(p)
+            obsinfo = ompdb.get_summary_obs_info(p)
+            obsdict = {}
+            for s in OMPState.STATE_ALL:
+                number = sum([i.number for i in obsinfo if i.status==s])
+                totaltime = sum([i.totaltime for i in obsinfo if i.status==s])
+                obsdict[OMPState.get_name(s).lower()] = [number, totaltime]
+
+
+            msbinfo = ompdb.get_summary_msb_info(p)
+            faultinfo = ompdb.get_fault_summary(p)
+            faultinfo = [len([i for i in faultinfo if i.status in [0,6]]), len(faultinfo)]
+            summarydict[p] = projinfo, obsdict, msbinfo, faultinfo
+        return render_template('fop-semester-summary.html', summary=summarydict,
+                               fopuname=fopuname, semester=semester)
 
     @app.route('/project/<projectid>')
     def project_page(projectid):
@@ -202,10 +236,14 @@ def web_pages():
         else:
             return ''
     @app.template_filter('enabled')
-    def enabled(value):
+    def enabled(value, symbol=False):
         if bool(value) is True:
+            if symbol:
+                return u'✓'
             return 'enabled'
         elif bool(value) is False:
+            if symbol:
+                return 'x'
             return 'disabled'
         else:
             return 'unknown'

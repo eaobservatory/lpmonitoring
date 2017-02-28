@@ -1,0 +1,105 @@
+{% extends 'projlayout.html' %}
+{% from "macros.html" import fop_form %}
+
+
+{% block extrahead %}
+<style type="text/css">
+
+table.fopsummary th.title, table.fopsummary td.title {
+min-width:30em;
+white-space:pre-line !important;
+text-align: left;
+}
+
+table.fopsummary td {
+white-space: pre;
+text-align: center;
+vertical-align:middle;
+}
+
+th {
+text-align: center;
+vertical-align: middle;
+}
+th.omptype {
+min-width: 50px;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+{{ fop_form(fopompid=fopuname, semester=semester)}}
+<div>
+<h2>{{fopuname}} projects for semester {{semester}}</h2>
+{% if summary %}
+<table class="fopsummary">
+  <thead>
+  <tr>
+    <th rowspan="2">Project</th>
+    <th rowspan="2">Enab<br/>led</th>
+    <th colspan="2">Allocation</th>
+    <th colspan="2">Completion</th>
+    <th colspan="2">MSBs</th>
+    <th colspan="5">Observations</th>
+    <th rowspan="2">Faults</th>
+    <th rowspan="2">PI</th>
+    <th class="title" rowspan="2">Title</th>
+    <th rowspan="2">OMP</th>
+  </tr>
+  <tr>
+    <th>Time</th>
+    <th>Tau</th>
+    <th>%</th>
+    <th>Left (hrs)</th>
+    <th> # uniq.</th>
+    <th>Tot. Time</th>
+    <th class="omptype">B</th>
+    <th class="omptype">G</th>
+    <th class="omptype">J</th>
+    <th class="omptype">Q</th>
+    <th class="omptype">R</th>
+  </tr>
+  </thead>
+  <tbody>
+    {% for project in summary.keys()|sort %}
+    {% set projinfo, obsdict, msbinfo, faultinfo  = summary[project] %}
+  <tr>
+    <td><a href="{{url_for('project_page', projectid=project)}}">{{project}}</a></td>
+    <td>{{projinfo.state|enabled(symbol=True)}}</td>
+    <td>{{'%.2F' % projinfo.allocated_hours}}</td>
+    <td>{{'%.2F-%.2F' % (projinfo.opacityrange) }}</td>
+    <td>{{'%.2F' % (100.0*(projinfo.allocated_hours - projinfo.remaining_hours)/projinfo.allocated_hours)}}</td>
+    <td>{{'%.2F' % projinfo.remaining_hours}}</td>
+    {% if msbinfo %}
+    <td>{{msbinfo|map(attribute='uniqmsbs')|sum}}</td>
+    <td>{{'%.2F' % ( (msbinfo|map(attribute='totaltime')|sum)/(60.0*60.0))}}</td>
+      {% else %}
+      <td colspan="2"> No msbs</td>
+      {% endif %}
+      {% for state in obsdict.keys()|sort %}
+      {% if obsdict[state][0] > 0 %}
+    <td><a href="{{url_for('observation', projectid=project, ompstatus=state)}}">{{obsdict[state][0]}} obs.<br/>{{'%.2F' %(obsdict[state][1]/(60.0*60.0))}} hrs</a></td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    {% endfor %}
+    {% if faultinfo[0] > 0 %}
+    <td><a href="http://omp.eao.hawaii.edu/cgi-bin/fbfault.pl?urlprojid={{project}}">{{faultinfo[0]}} open /{{faultinfo[1]}}</a></td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    <td>{{projinfo.pi[0].uname}}</td>
+    <td class="title">{{projinfo.title}}</p></td>
+    <td><a href="http://omp.eao.hawaii.edu/cgi-bin/projecthome.pl?urlprojid={{project}}">{{project}}@OMP</a></td>
+
+</tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+
+No projects found.
+{% endif %}
+</div>
+{% endblock %}

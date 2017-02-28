@@ -1,0 +1,7 @@
+{% extends 'projlayout.html' %}
+{% from "macros.html" import fop_form %}
+
+{% block content %}
+{{ fop_form(fopompid=fopuname, semester=semester) }}
+{% endblock %}
+

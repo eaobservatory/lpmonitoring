@@ -29,12 +29,12 @@ project_header %}
     <div class="clear"></div>
     {% if obsinfodict %}
     <div id="allobservations" class="projblock">
-      <h4>{% if ompstatus %}{{ompstatus|ompstatus}} {% endif %}Observations {% if utdatestart %} from {{utdatestart}} {% endif %} {% if utdateend %} until {{utdateend}} {% endif %}</h4>
+      <h4>{% if ompstatus %}OMP {{ompstatus|ompstatus}} {% endif %}Observations {% if utdatestart %} from {{utdatestart}} {% endif %} {% if utdateend %} until {{utdateend}} {% endif %}</h4>
       {{ render_obs_table(obsinfodict, lookupdict) }}
     </div>
     <div class="clear"></div>
-    {% else %}
-    <h4> No {{int(ompstatus)|ompstatus}} observations found for this project
+    {% else  %}
+    <h4> No {% if ompstatus %}{{int(ompstatus)|ompstatus}}{% endif %} observations found for this project
       {% if utdatestart %} from {{utdatestart}} {% endif %} {% if utdateend %} until {{utdateend}} {% endif %} </h4>
     {% endif %}
 {% endblock %}
