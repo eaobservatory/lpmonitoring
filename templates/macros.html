@@ -151,7 +151,11 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
     <td>{{'%.2F' % o.hetinfo[0].velocity}}</td>
     <td>{{o.hetinfo[0].bwmode}}</td>
     {% endif %}
+    {% if o.tau %}
     <td>{{'%.2F' % o.tau.average|sn}}</td>
+    {% else %}
+    <td>--</td>
+    {% endif %}
     <td>{{o.transmission|sn}}</td>
     <td><a href="{{url_for_omp_comment(o.obsid, o.instrument|ompinst, o.obsnum,
                  o.time.start.strftime('%Y-%m-%d-%H-%M-%S'))}}">{{o.comment.status|ompstatus}}</a></td>
