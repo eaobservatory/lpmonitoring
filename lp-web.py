@@ -44,6 +44,7 @@ if arguments['--debug'] is True:
     host = '127.0.0.1'
     debug = True
 
+
 else:
     host='0.0.0.0'
     debug = None
@@ -56,4 +57,6 @@ else:
 
 # Start flask app.
 app = web.web_pages()
+if debug:
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.run(host=host, debug=debug, port=port, use_reloader=debug)
