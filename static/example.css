@@ -31,7 +31,7 @@ header p{
 header {
     display: block;
     color: white;
-    max-width: 25em;
+    max-width: 20em;
     padding: 1em;
     float: left;
 }
@@ -130,9 +130,9 @@ div#completionsummary p{
     margin-top:11px;
 }
 
-td{
+/*td{
 white-space: pre-line;
-}
+}*/
 
 td.comment, th.comment{
 white-space: normal;
@@ -144,9 +144,9 @@ min-width: 15em;
      min-width: 2em;
 }
 
-table{
+/*table{
 width:2px;
-}
+}*/
 
 div#completionsummary:after {
     clear: both;
@@ -185,10 +185,11 @@ dl {list-style-type: ordered}
 #selectable {list-style-type: none; margin:0; padding: 0; width:60%;}
 #selectable li{ margin: 3px; padding: 0.4em; font-size: 1.4em; height:18px;}
 
+
 div.panel {
     margin: 2ex;
     padding: 1ex;
-    background: white;
+    background: none;
     color: black;
     text-align: left;
     border-radius: 8px;

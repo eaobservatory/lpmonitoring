@@ -15,10 +15,14 @@
     <header>
       <p>{{projinfo.title}}</p>
       <h1>{{projinfo.id}}</h1>
+      {% if projinfo.allocated_hours > 0 %}
       {% set completion=100.0*(projinfo.allocated_hours - projinfo.remaining_hours)/projinfo.allocated_hours %}
+      {% else %}
+      {% set completion = 'unknown' %}
+      {% endif %}
       <p>PI: <span class="pi">{{projinfo.pi|join(', ',attribute='uname')}}</span></br>
         FOP: <span class="fop">{{projinfo.fops|join(', ',attribute='uname')}}</span><br/>
-        <span class="{{projinfo.state|enabled}}" title="{{projinfo.state|enabled}}">{{projinfo.semester}}</span>⚫{{ '%i'% projinfo.allocated_hours}} hrs⚫{{'%.1F' % completion}}%⚫<span style="text-transform:none">τ</span>:{{'%.2F-%.2F' % (projinfo.opacityrange)}}<br>
+        <span class="{{projinfo.state|enabled}}" title="{{projinfo.state|enabled}}">{{projinfo.semester}}</span>⚫{{ '%i'% projinfo.allocated_hours}} hrs⚫{% if completion!= 'unknown' %}{{'%.1F' % completion}}%⚫{% endif %}<span style="text-transform:none">τ</span>:{{'%.2F-%.2F' % (projinfo.opacityrange)}}<br>
       </p>
     </header>
 

@@ -58,7 +58,7 @@ def web_pages():
     # Setup root page to redirect to summary
     @app.route('/')
     def home_page():
-        return redirect(url_for('summary'), code=303)
+        return redirect(url_for('summary', semester='LAP', inprog=0), code=303)
 
     @app.route('/project/<projectid>/observations')
     def observation(projectid):
@@ -108,13 +108,42 @@ def web_pages():
     # Summary page
     @app.route('/summary/')
     def summary():
-        values = create_summary(ompdb)
+        semester = request.args.get('semester', None, type=str)
+        queue = request.args.get('queue', None, type=str)
+        patternmatch = request.args.get('patternmatch', None, type=str)
+        if patternmatch:
+            patternmatch = '%{}%'.format(patternmatch)
+        projects = request.args.getlist('proj', type=str)
+        #exclude_projects = request.args.getlist('notproj', type=str)
+        #telescope = request.args.get('telescope', 'JCMT', type=str)
+        blocks = bool(request.args.get('showblocks', 0, type=int))
+        exclude_done = bool(request.args.get('inprog', 1, type=int))
+        details = bool(request.args.get('details', 1, type=int))
+        if not semester and not queue and not patternmatch and not projects:
+            semester='LAP'
+        values = create_summary(ompdb, semester=semester, queue=queue, patternmatch=patternmatch,
+                                projects=projects, exclude_done=exclude_done,
+                                details=details, blocks=blocks)
         return render_template('summary.html', **values)
 
     # Chart showing overall completion by project.
     @app.route('/summary/completionchart/')
     def completion_chart():
-        return prepare_completion_chart(ompdb)
+        semester = request.args.get('semester', None, type=str)
+        queue = request.args.get('queue', None, type=str)
+        patternmatch = request.args.get('patternmatch', None, type=str)
+        if patternmatch:
+            patternmatch = '%{}%'.format(patternmatch)
+        projects = request.args.getlist('proj', type=str)
+        exclude_projects = request.args.getlist('notproj', type=str)
+        telescope = request.args.get('telescope', 'JCMT', type=str)
+        blocks = bool(request.args.get('showblocks', 0, type=int))
+        exclude_done = bool(request.args.get('inprog', 1, type=int))
+        if not patternmatch and not semester and not queue and not projects:
+            semester='LAP'
+        return prepare_completion_chart(ompdb, semester=semester, queue=queue, patternmatch=patternmatch,
+                                        projects=projects, exclude_projects=exclude_projects, telescope=telescope,
+                                        blocks=blocks, exclude_done=exclude_done)
 
 
 

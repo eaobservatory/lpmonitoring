@@ -172,11 +172,34 @@ figcaption {
 div.panel {
     margin: 2ex;
     padding: 1ex;
-    background: white;
+    background: none;
     color: black;
     text-align: left;
     border-radius: 8px;
     display: inline-block;
+    border-color: black;
+    border-width:2px;
+    border-style:solid;
+}
+
+div#summary.panel-small {
+    white-space:
+}
+
+div.summarychart {
+    background: none;
+    max-width: 70em;
+    display:inline-block;
+    vertical-align:top;
+}
+div.summary {
+    display:inline-block;
+    vertical-align:top;
+}
+
+table.projlist{
+    max-width:28em;
+    font-size:small;
 }
 
 div.warning{
@@ -192,7 +215,7 @@ div.warning{
 div.panel-small {
     display: inline-block;
     vertical-align: top;
-    background: white;
+    background: none;
     padding: 1ex;
 }
 
@@ -484,4 +507,13 @@ th {
  
 .TODO::before{
     content: "TODO ";
+}
+
+
+img.weathercompletion {
+    height:20em;
+}
+
+td.total{
+    font-weight: bold;
 }

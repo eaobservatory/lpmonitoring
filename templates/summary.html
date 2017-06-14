@@ -1,131 +1,172 @@
 {% extends 'layout.html' %}
-
+{% from "macros.html" import render_member_info, render_obs_table, project_navbar, project_summary,
+project_header %}
 {% block content %}
 
-  <h1> JCMT Large Program Monitoring </h1>
-<div class="panel">
-<img src={{ url_for('completion_chart')}} />
+  <h1> {{fulltitle}} </h1>
+<div class="summary">
+  <h2> Project list (priority order)</h2>
+  <table class="projlist" style="font-size:small">
+  {% for p in projects %}
+    <tr>
+      {% if ompallocations[p].allocated != 0 %}
+      {% set percentcomplete = 100.0 * (ompallocations[p].allocated - ompallocations[p].remaining)/ompallocations[p].allocated %}
+      {% else %}
+      {% set percentcomplete= 0.0 %}
+      {% endif %}
+      <th><a href="#{{p}}">{{p}}</a></th>
+      <td>{{ '%.1f' % percentcomplete | float }}%</td>
+      <td class="title" style="text-align:left">{{ompallocations[p].title}}</td>
+
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="summarychart">
+  <h2> Completion chart</h2>
+  {% for f in figs %}
+  <a href="{{f}}"><img src="data:image/png;base64,{{figs[f]}}"/></a>
+  {% endfor %}
 </div>
 
-{% for p in LP.PROJECTS %}
-  <div class="panel">
-    <a href="/project/{{p.projectid}}">
-      <h2>{{ p.name }}: {{ p.projectid}} ({{ projdict[p.projectid].allocation }} hrs)</h2>
-    </a>
-    <div class="warning-parent">
-    {% if projdict[p.projectid].number_observations['questionable'] > 0 %}
-    <div class="warning">
-      <a href="/project/{{p.projectid}}/observations?ompstatus=questionable">
-        {{projdict[p.projectid].number_observations['questionable'] }}
-      QUESTIONABLE observations waiting to be resolved!</a>
-      <br>
-      Please resolve then recharge time & reset MSBs as appropriate.
-    </div>
-    {% endif %}
-    {% if projdict[p.projectid].unconfirmed> 0 %}
-    <div class="warning">
-      {{' %.2F '%  projdict[p.projectid].unconfirmed| float}} hrs unconfirmed for this project.
-    </div>
-    {% endif %}
-    </div>
+{% if details == true%}
+
+{% for p in projects %}
+  <div class="panel" id="{{p}}">
 
     <div class="panel-small">
-      <h4> Allocation</h4>
-      <table>
-        <tr>
-          {% for inst in p.allocdict.keys() %}
-          <th colspan="2">{{ inst }}</th>
+      <a href="/project/{{p}}">
+        {{project_header(projinfodict[p])}}
+      </a>
+      </br>
+
+      {% if p in allocations %}
+      <div class="panel-small">
+        <table>
+          <tr>
+            <th></th>
+            {% for inst in allocations[p].keys() %}
+            <th>{{ inst }}</th>
+            {% endfor %}
+          </tr>
+          {% for band in allocations[p]| allocationbandset %}
+          <tr>
+            <th>B{{band}}</th>
+            {% for inst in allocations[p].keys() %}
+            <td> {{allocations[p][inst].get(band, '') }} </td>
+            {% endfor %}
+          </tr>
           {% endfor %}
-        </tr>
-        {% for band in p.allocdict| allocationbandset %}
-        <tr>
-          <th>Band {{band}}</th>
-          {% for inst in p.allocdict.keys() %}
-          <td> {{p.allocdict[inst].get(band, '') }} </td>
-          {% endfor %}
-        </tr>
-        {% endfor %}
-        <tr class="blank_row"/>
-        <tr>
-          <th> Total </th>
-          {% for inst in p.allocdict.keys() %}
-          <td> {{p.allocdict[inst].values() | sum}} hrs </td>
-          {% endfor %}
-        </tr>
-      </table>
+          <tr class="blank_row"/>
+          <tr>
+            <th> </th>
+            {% for inst in allocations[p].keys() %}
+            <td class="total"> {{allocations[p][inst].values() | sum}} hrs </td>
+            {% endfor %}
+          </tr>
+        </table>
+      </div>
+        {% endif %}
+</br>
+      <div class="panel-small">
+        <h4> Links </h4>
+        <p><a href="http://omp.eao.hawaii.edu/cgi-bin/projecthome.pl?urlprojid={{ p }}">OMP Project Home</a></p>
+        <p><a href="http://omp.eao.hawaii.edu/cgi-bin/fbfault.pl?urlprojid={{ p }}"> {{ projdict[p].faults.numopen }} Open/{{ projdict[p].faults.total }} Faults</a></p>
+        <p><a href="http://kamaka:5000/job?project={{ p }}&mode=JSAQA&number=1000"> Nightly Reductions</a></p>
+      </div>
     </div>
 
 
-    <div id="msbs" class="panel-small">
-      <h4> MSBS Currently Available </h4>
-      <table>
-        <tr><th>Tau Range</th><th>Unique<br>MSBSs</th><th>Total<br>repeats</th><th>Time<br>(hrs)</th></tr>
-        {% for msb in projdict[p.projectid].msbs %}
-        <tr>
-          <th>{{ '%0.2f' %  msb.taumin|float}}-{{ '%0.2f' % msb.taumax |float }}</th>
-          <td>{{msb.uniqmsbs}}</td>
-          <td>{{msb.totalmsbs}}</td>
-          <td>{{ '%0.2f'%(msb.totaltime/(60.0*60.0)) | float }}</td>
-        </tr>
-        {% endfor %}
-        <tr class="blank_row"/>
-        <tr><th>Total</th>
-          <td>{{ projdict[p.projectid].msbs | sum(attribute='uniqmsbs') }}</td>
-          <td>{{ projdict[p.projectid].msbs | sum(attribute='totalmsbs') }}</td>
-          <td>{{ '%0.2f'% (projdict[p.projectid].msbs | sum(attribute='totaltime')/(60.0*60.0)) | float}}</td>
-        </tr>
-      </table>
-    </div>
-    <div id="summary" class="panel-small">
-      <h4> Completion summary </h4>
-      <table>
-        <tr><th>Completion</th>
+
+    <div class="panel-small">
+
+      <div class="warning-parent">
+        {% if projdict[p].number_observations['questionable'] > 0 %}
+        <div class="warning">
+          <a href="/project/{{p.projectid}}/observations?ompstatus=questionable">
+            {{projdict[p].number_observations['questionable'] }}
+            QUESTIONABLE observations waiting to be resolved!</a>
+          <br>
+          Please resolve then recharge time & reset MSBs as appropriate.
+        </div>
+        <br/>
+        {% endif %}
+        {% if projdict[p].unconfirmed> 0 %}
+        <div class="warning">
+          {{' %.2F '%  projdict[p].unconfirmed| float}} hrs unconfirmed for this project.
+        </div>
+        {% endif %}
+      </div>
+
+      <div id="msbs" class="panel-small">
+        <h4> MSBS Currently Available </h4>
+        <table>
+          <tr><th>Tau<br/>Range</th><th>Unique<br>MSBSs</th><th>Total<br>repeats</th><th>Time<br>(hrs)</th></tr>
+          {% for msb in projdict[p].msbs %}
+          <tr>
+            <th>{{ '%0.2f' %  msb.taumin|float}}-{{ '%0.2f' % msb.taumax |float }}</th>
+            <td>{{msb.uniqmsbs}}</td>
+            <td>{{msb.totalmsbs}}</td>
+            <td>{{ '%0.2f'%(msb.totaltime/(60.0*60.0)) | float }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="blank_row"/>
+          <tr><th>Total</th>
+            <td>{{ projdict[p].msbs | sum(attribute='uniqmsbs') }}</td>
+            <td>{{ projdict[p].msbs | sum(attribute='totalmsbs') }}</td>
+            <td>{{ '%0.2f'% (projdict[p].msbs | sum(attribute='totaltime')/(60.0*60.0)) | float}}</td>
+          </tr>
+        </table>
+      </div>
+
+  
+
+      <div id="summary" class="panel-small">
+        <h4> Completion summary </h4>
+        <table style="width:25em">
+          <tr><th style="white-space:pre-wrap; width:2px">Completion</th>
+            <td style="white-space:nowrap; width:2px">
+              {{ '%.1f' % projdict[p].percentcomplete | float }} %
+              ({{ '%.2f' % projdict[p].charged | float }} /
+              {{ projdict[p].allocation }} hrs )
+            </td>
+          </tr>
+          <tr><th>Observations</th>
+            <td>
+              <span class="good">{{ projdict[p].number_observations['good'] }} G</span> /
+              <span class="questionable">{{ projdict[p].number_observations['questionable'] }} Q</span> /
+              <span class="bad">{{ projdict[p].number_observations['bad'] }} B</span> /
+              <span class="rejected">{{ projdict[p].number_observations['rejected'] }} R</span> /
+              <span class="junk">{{ projdict[p].number_observations['junk'] }} J</span> /
+            </td>
+          </tr>
+          <tr><th>Better than requested</th><td><span class="TODO"></span></td></tr>
+          <tr><th>Worse than requested</th><td><span class="TODO"/></td></tr>
+          <tr><th>Time on sky</th>
           <td>
-            {{ '%.1f' % projdict[p.projectid].percentcomplete | float }} %
-            ({{ '%.2f' % projdict[p.projectid].charged | float }} /
-            {{ projdict[p.projectid].allocation }} hrs )
-          </td>
-        </tr>
-        <tr><th>Observations</th>
-          <td>
-            <span class="good">{{ projdict[p.projectid].number_observations['good'] }} G</span> /
-            <span class="questionable">{{ projdict[p.projectid].number_observations['questionable'] }} Q</span> /
-            <span class="bad">{{ projdict[p.projectid].number_observations['bad'] }} B</span> /
-            <span class="rejected">{{ projdict[p.projectid].number_observations['rejected'] }} R</span> /
-            <span class="junk">{{ projdict[p.projectid].number_observations['junk'] }} J</span> /
-          </td>
-        </tr>
-        <tr><th>Better-than-requested</th><td><span class="TODO"></span></td></tr>
-        <tr><th>Worse-than-requested</th><td><span class="TODO"/></td></tr>
-        <tr><th>Time on sky</th>
-          <td>
-            <span class="good">{{ '%.2f' % (projdict[p.projectid].time_observations['good']/
+            <span class="good">{{ '%.2f' % (projdict[p].time_observations['good']/
               (60.0*60.0))|float }} hrs G</span> /
-            <span class="questionable">{{ '%.2f' % (projdict[p.projectid].time_observations['questionable']/
+            <span class="questionable">{{ '%.2f' % (projdict[p].time_observations['questionable']/
               (60.0*60.0)) | float }} hrs Q </span>
-        </td></tr>
-        <tr><th> Unchargable time (B/J/R)</th>
-          <td>{{ '%.2f' % (projdict[p.projectid].time_observations['uncharged']/(60.0*60.0))|float }}</td>
-        </tr>
+          </td></tr>
+          <tr><th> Unchargable time (B/J/R)</th>
+            <td>{{ '%.2f' % (projdict[p].time_observations['uncharged']/(60.0*60.0))|float }} hrs</td>
+          </tr>
 
-      </table>
-    </div>
-    <div class="panel-small">
-      <h4> Links </h4>
-      <p><a href="http://omp.eao.hawaii.edu/cgi-bin/projecthome.pl?urlprojid={{ p.projectid }}">OMP Project Home</a></p>
-      <p><a href="http://omp.eao.hawaii.edu/cgi-bin/fbfault.pl?urlprojid={{ p.projectid }}"> {{ projdict[p.projectid].faults.numopen }} Open/{{ projdict[p.projectid].faults.total }} Faults</a></p>
-      <p><a href="http://kamaka:5000/job?project={{ p.projectid }}&mode=JSAQA&number=1000"> Nightly Reductions</a></p>
-    </div>
+        </table>
+      </div>
+
+
+
     </br>
-    {% if projdict[p.projectid].summary |length > 0 %}
+    {% if p in projectfigs %}
     <div class="panel-small">
       <h4> Weather band completion </h4>
-      <img src={{url_for('project_chart', projectid=p.projectid )}} />
+      <img class="weathercompletion" src="data:image/png;base64,{{projectfigs[p]}}"/>
     </div>
     {% endif %}
+    </div>
   </div>
-
-
 {% endfor %}
-
+{% endif %}
 {% endblock %}
