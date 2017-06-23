@@ -14,7 +14,7 @@ project_header %}
       {% else %}
       {% set percentcomplete= 0.0 %}
       {% endif %}
-      <th><a href="#{{p}}">{{p}}</a></th>
+      <th>{% if not ompallocations[p].enabled %}✗{% else %}&nbsp;{% endif %}{% if details == true %}<a href="#{{p}}">{{p}}</a>{% else %}<a href="/project/{{p}}">{{p}}</a>{% endif %}</th>
       <td>{{ '%.1f' % percentcomplete | float }}%</td>
       <td class="title" style="text-align:left">{{ompallocations[p].title}}</td>
 

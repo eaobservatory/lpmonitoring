@@ -260,7 +260,7 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
 
         fig = make_completion_chart(ompdb, figure, projs, allocs, charges,
                                     blocks=blocks)
-        fig_url = url_for('completion_chart', proj=projs, blocks=blocks)
+        fig_url = url_for('completion_chart', proj=projs, blocks=int(blocks), inprog=int(exclude_done))
         # Create sendfile object
         canvas = FigureCanvas(fig)
         img = StringIO.StringIO()
@@ -415,7 +415,7 @@ def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
 
     timechargedorig = timecharged
     ompallocsorig = ompallocations
-
+    print('MAKE COMPLETION CHART: blocks=',blocks)
 
     # Find the last date being plotted.
     if timechargedorig:
@@ -489,15 +489,15 @@ def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
                 colordict[p] = color
 
         # set up plot limits and labels
-        ax.set_ylim(0, 100)
+        ylim=ax.get_ylim()
+        ax.set_ylim(0, max(ylim[1], 100))
         #ax.set_xlim(sdate,edate)
         ax.set_ylabel('Percentage completion')
         fig.patch.set_visible(False)
         xlim = ax.get_xlim()
         ax.set_xlim(mindate, maxdate)
 
-        fig.autofmt_xdate()
-        ax.tick_params(axis='x', which='minor', bottom='on', top='on')
+      
         ax.xaxis.set_minor_locator(matplotlib.dates.MonthLocator())
 
         ax.yaxis.grid()
@@ -565,10 +565,26 @@ def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
             ax2.text(5, i+0.4, ompallocs[projects[i]].title,
                      color='black', ha='left', alpha=1.0, va='bottom', size='small')
         ax.text(0.1, 0.9, 'Completion as of ' + currdate, transform=ax.transAxes)
+
+
         # Finish up plot
         ax2.set_axis_off()
         ax2.invert_yaxis()
 
+    fig.autofmt_xdate()
+
+    if (number_plots > 1):
+        print('ticking top of first plot')
+        ax = fig.axes[0]
+        ax.tick_params(axis='x', which='major', top='on', bottom='on')
+        ax.tick_params(axis='x', which='major',labeltop='on', labelbottom=False)
+        majticklabels_shown = fig.axes[-2].get_xmajorticklabels()
+        majticklabels = ax.get_xmajorticklabels()
+        angle = majticklabels_shown[0].get_rotation()
+        for i in majticklabels:
+            i.set_visible(True)
+            i.set_rotation(angle)
+            i.set_ha('left')
     fig.set_tight_layout(tight=True)
 
     return fig

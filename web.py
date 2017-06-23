@@ -116,8 +116,8 @@ def web_pages():
         projects = request.args.getlist('proj', type=str)
         #exclude_projects = request.args.getlist('notproj', type=str)
         #telescope = request.args.get('telescope', 'JCMT', type=str)
-        blocks = bool(request.args.get('showblocks', 0, type=int))
-        exclude_done = bool(request.args.get('inprog', 1, type=int))
+        blocks = bool(request.args.get('blocks', 1, type=int))
+        exclude_done = bool(request.args.get('inprog', 0, type=int))
         details = bool(request.args.get('details', 1, type=int))
         if not semester and not queue and not patternmatch and not projects:
             semester='LAP'
@@ -137,7 +137,7 @@ def web_pages():
         projects = request.args.getlist('proj', type=str)
         exclude_projects = request.args.getlist('notproj', type=str)
         telescope = request.args.get('telescope', 'JCMT', type=str)
-        blocks = bool(request.args.get('showblocks', 0, type=int))
+        blocks = bool(request.args.get('blocks', 0, type=int))
         exclude_done = bool(request.args.get('inprog', 1, type=int))
         if not patternmatch and not semester and not queue and not projects:
             semester='LAP'
