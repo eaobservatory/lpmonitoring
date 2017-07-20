@@ -92,7 +92,6 @@ def web_pages():
             semstart = datetime.datetime.strptime(semstart, '%Y-%m-%d').date()
         else:
             semstart = datetime.datetime.now().date()
-            #semstart = datetime.datetime.strptime('2016-08-01', '%Y-%m-%d').date()
 
         semend = request.args.get('semend', None)
         if semend:
@@ -155,7 +154,7 @@ def web_pages():
 
     @app.route('/summary/summary_query', methods=['POST'])
     def summary_query():
-        print(request.form)
+
         semester = request.form.get('semester', None, type=str)
         if semester:
             semester = semester.upper()
