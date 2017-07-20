@@ -112,12 +112,15 @@ LP_2A = ['M17BL005','M17BL011', 'M17BL009', 'M17BL004', 'M17BL002']
 LP_2B = ['M17BL001','M17BL010', 'M17BL006', 'M17BL007']
 
 
-def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, projects=None, exclude_done=True,
-                   details=True, blocks=True):
+def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, projects=None, exclude_projects=None,
+                   exclude_done=True,
+                   details=True, blocks=True, allprojectmsb=True):
     """
     Get the summary information for the JCMT large programmes.
 
     """
+
+    originalprojects = projects[:]
 
     # Basic info for web page.
     webinfo = {}
@@ -142,7 +145,13 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
                                       patternmatch=patternmatch, telescope='JCMT')
     projects = list(ompallocs.keys())
 
-
+    if exclude_projects:
+        print('excluding projects!', exclude_projects)
+        for p in exclude_projects:
+            try:
+                projects.remove(p)
+            except ValueError:
+                pass
 
     timecharged = ompdb.get_time_charged_group(projects=projects, telescope='JCMT')
 

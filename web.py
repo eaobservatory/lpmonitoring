@@ -114,7 +114,7 @@ def web_pages():
         if patternmatch:
             patternmatch = '%{}%'.format(patternmatch)
         projects = request.args.getlist('proj', type=str)
-        #exclude_projects = request.args.getlist('notproj', type=str)
+        exclude_projects = request.args.getlist('notproj', type=str)
         #telescope = request.args.get('telescope', 'JCMT', type=str)
         blocks = bool(request.args.get('blocks', 1, type=int))
         exclude_done = bool(request.args.get('inprog', 0, type=int))
@@ -122,7 +122,7 @@ def web_pages():
         if not semester and not queue and not patternmatch and not projects:
             semester='LAP'
         values = create_summary(ompdb, semester=semester, queue=queue, patternmatch=patternmatch,
-                                projects=projects, exclude_done=exclude_done,
+                                projects=projects, exclude_projects=exclude_projects, exclude_done=exclude_done,
                                 details=details, blocks=blocks)
         return render_template('summary.html', **values)
 
