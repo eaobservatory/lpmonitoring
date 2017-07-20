@@ -270,7 +270,7 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
 {% endmacro %}
 
 
-{% macro summary_query_form(semester=None, queue=None, patternmatch=None, projects=None, exclude_projects=None,blocks=1, exclude_done=0, details=1) %}
+{% macro summary_query_form(semester=None, queue=None, patternmatch=None, projects=None, exclude_projects=None, blocks=True, exclude_done=False, details=True, allprojectmsb=True) %}
 <div class="form">
   <h2> Project constraints </h2>
   <form method="POST" action="{{url_for('summary_query')}}">
@@ -284,16 +284,23 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
     <input type="text" name="fopid" value="{% if fopid %}{{fopid}}{% endif %}" placeholder="OMP ID, Requires Sem."><br/>
     <div class="formarea">
     <label for="projects">Project IDs</label>
-    <textarea rows="3", cols="8" name="projects" placeholder="one per line">{% if projects %}{% for p in projects %}{{p}}</br>{% endfor %}{% endif %}</textarea>
+    <textarea rows="3", cols="8" name="projects" placeholder="one per line">{% if projects %}{% for p in projects %}{{p}}
+{% endfor %}{% endif %}</textarea>
     </div>
     <div class="formarea">
       <label for="exclude_projects">Excluded Projects</label>
-      <textarea rows="3", cols="8" name="exclude_projects" placeholder="one per line">{% if exclude_projects %}{% for p in exclude_projects %}{{p}}</br>{% endfor %}{% endif %}</textarea>
+      <textarea rows="3", cols="8" name="exclude_projects" placeholder="one per line">{% if exclude_projects %}{% for p in exclude_projects %}{{p}}
+{% endfor %}{% endif %}</textarea>
     </div>
 
-    <label for="details">Show details</label><input type="checkbox" name="details" value="1"></br>
-    <label for="blocks">Show observing blocks</label><input type="checkbox" name="blocks" value="1"></br>
-    <label for="exclude_done">Exclude completed projects<input type="checkbox" name="exclude_done" value="1"></br>
+    <label for="details">Show details</label><input type="checkbox" name="details" value="1"
+               {% if details == true %} checked{% endif %}></br>
+    <label for="blocks">Show observing blocks</label><input type="checkbox" name="blocks" value="1"
+                {% if blocks == true %} checked{% endif %}></br>
+    <label for="exclude_done">Exclude completed projects</label><input type="checkbox" name="exclude_done"
+                value="1" {% if exclude_done %} checked{% endif %}></br>
+    <label for="allprojectmsb">Show MSB availability</label><input type="checkbox" name="allprojectmsb"
+                value="1" {% if allprojectmsb %} checked{% endif %}></br>
     <input type="submit" value="Submit"/>
   </form>
 </div>

@@ -4,7 +4,9 @@
 
   <h1> {{fulltitle}} </h1>
 <div class="summary">
-  {{summary_query_form()}}
+  {{summary_query_form(semester=semester, queue=queue, patternmatch=patternmatch, projects=requested_projects,
+  exclude_projects=exclude_projects, blocks=blocks, exclude_done=exclude_done,
+  details=details, allprojectmsb=allprojectmsb)}}
   <h2> Project list (priority order)</h2>
   <table class="projlist" style="font-size:small">
   {% for p in projects %}

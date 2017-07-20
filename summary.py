@@ -149,7 +149,7 @@ LP_2B = ['M17BL001','M17BL010', 'M17BL006', 'M17BL007']
 
 def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, projects=None, exclude_projects=None,
                    exclude_done=True,
-                   details=True, blocks=True, allprojectmsb=True):
+                   details=True, blocks=True, allprojectmsb=True, queryparams=None):
     """
     Get the summary information for the JCMT large programmes.
 
@@ -174,7 +174,16 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
     webinfo['title'] = 'Summary'
     webinfo['allocations'] = allocations
 
-
+    #Put original information into webinfo, for query_form.
+    webinfo['semester'] = semester
+    webinfo['queue'] = queue
+    webinfo['patternmatch'] = patternmatch
+    webinfo['requested_projects'] = originalprojects
+    webinfo['exclude_projects'] = exclude_projects
+    webinfo['details'] = bool(details)
+    webinfo['exclude_done'] = bool(exclude_done)
+    webinfo['blocks'] = bool(blocks)
+    webinfo['allprojectmsb'] = bool(allprojectmsb)
 
     ompallocs = ompdb.get_allocations(semester=semester, queue=queue, projects=projects,
                                       patternmatch=patternmatch, telescope='JCMT')
