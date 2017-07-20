@@ -84,7 +84,7 @@
       <div class="warning-parent">
         {% if projdict[p].number_observations['questionable'] > 0 %}
         <div class="warning">
-          <a href="/project/{{p.projectid}}/observations?ompstatus=questionable">
+          <a href="/project/{{p}}/observations?ompstatus=questionable">
             {{projdict[p].number_observations['questionable'] }}
             QUESTIONABLE observations waiting to be resolved!</a>
           <br>
