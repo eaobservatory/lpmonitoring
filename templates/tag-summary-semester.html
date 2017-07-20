@@ -1,0 +1,57 @@
+{% extends 'layout.html' %}
+{% from "macros.html" import project_header, summary_query_form %}
+
+{% block extrahead %}
+<style type="text/css">
+  {{extracss}}
+  tfoot input, thead input {
+  width: 100%;
+  padding: 3px;
+  box-sizing: border-box;
+  }
+</style>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.css"/>
+     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.js"></script>
+    <script type="text/javascript" src="/static/most.js"></script>
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+  <h1> TAG Summary:{{semester}} </h1>
+<div class="overallsummary">
+  <img src="data:img/png;base64,{{figsummary}}"/>
+  {{table | safe}}
+</div>
+
+<div class="piecharts">
+  <h2> Completion by PI Regional Affiliation </h2>
+  {% for r in regioncharts %}
+  <div class="panel-small">
+    <h3>{{r}}</h3>
+    <img src="data:img/png;base64,{{regioncharts[r]}}"/>
+  </div>
+  {% endfor %}
+</div>
+<div class="piecharts">
+  <h2> Completion by Allocated Weather Band </h2>
+  {% for b in bandcharts %}
+  <div class="panel-small">
+    <h3>{{b}}</h3>
+    <img src="data:img/png;base64,{{bandcharts[b]}}"/>
+  </div>
+  {% endfor %}
+</div>
+<div class="piecharts">
+  <h2> Completion by Instrument</h2>
+  {% for i in instcharts %}
+  <div class="panel-small">
+    <h3>{{i}}</h3>
+    <img src="data:img/png;base64,{{instcharts[i]}}"/>
+  </div>
+  {% endfor %}
+<div>
+
+
+{% endblock %}

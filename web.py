@@ -36,6 +36,7 @@ from matplotlib.figure import Figure
 import StringIO
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
+from tag_allocation_summary import prepare_tagallocation_summary
 
 def web_pages():
     """ Create web pages for large program monitoring
@@ -144,6 +145,12 @@ def web_pages():
         return prepare_completion_chart(ompdb, semester=semester, queue=queue, patternmatch=patternmatch,
                                         projects=projects, exclude_projects=exclude_projects, telescope=telescope,
                                         blocks=blocks, exclude_done=exclude_done)
+
+
+    @app.route('/tag-summary/<semester>')
+    def tag_summary(semester):
+        values =  prepare_tagallocation_summary(semester)
+        return render_template('tag-summary-semester.html', **values)
 
 
     @app.route('/summary/summary_query', methods=['POST'])
