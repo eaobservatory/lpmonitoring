@@ -199,8 +199,6 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
     projdict = {}
     projinfodict = {}
 
-
-
     webinfo['ompallocations'] = ompallocs
     webinfo['timecharged'] = timecharged
 
@@ -297,7 +295,7 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
 
     print('creating completion charts')
     figs = OrderedDict()
-    if semester == 'LAP':
+    if (semester == 'LAP' or queue == 'LAP'):
         completionchartprojs = [LP_1, LP_2A, LP_2B]
     else:
         completionchartprojs = [projects]
@@ -612,7 +610,6 @@ def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
         xlim = ax.get_xlim()
         ax.set_xlim(mindate, maxdate)
 
-      
         ax.xaxis.set_minor_locator(matplotlib.dates.MonthLocator())
 
         ax.yaxis.grid()
