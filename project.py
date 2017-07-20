@@ -35,7 +35,7 @@ from matplotlib.figure import Figure
 from flask import send_file
 from io import BytesIO
 import matplotlib
-from summary import prepare_project_chart
+
 import base64
 
 ObsInfo = namedtuple('ObsInfo', 'obsid obsnum '+ \
@@ -322,7 +322,7 @@ def get_instrument(o):
 
 
 
-def create_msb_image(msbs, utdate, semesterdates):
+def create_msb_image(msbs, utdate, semesterdates, multiproject=False):
     """
     Create a plot of observability ala source plot, for all sources in msb list.
 
@@ -357,13 +357,25 @@ def create_msb_image(msbs, utdate, semesterdates):
     coorddict={}
 
 
+    # First plot: observability at requested night.
+    ax = fig.add_subplot(121)
+
     for coord in coordstypes:
         if coord != 'RADEC':
             print('Warning: non-RA-DEC coordinates not yet supported')
         else:
             ra = [i.ra2000 for i in msbs if i.coordstype==coord]
             dec = [i.dec2000 for i in msbs if i.coordstype==coord]
-            labels = [i.target for i in msbs if i.coordstype==coord]
+            if not multiproject:
+                labels = [i.target for i in msbs if i.coordstype==coord]
+            else:
+                labels = ['{}: {}'.format(i.project, i.target) for i in msbs if i.coordstype==coord]
+                projects = [i.project for i in msbs if i.coordstype==coord]
+                projectcolors = {}
+                for p in set(projects):
+                    projectcolors[p] = next(ax._get_lines.prop_cycler)['color']
+                colors = [projectcolors[i.project] for i in msbs if i.coordstype==coord]
+
             coords = SkyCoord(ra=np.rad2deg(ra)*u.degree, dec=np.rad2deg(dec)*u.degree, frame='fk5')
             coorddict[coord] = coords
             sources_tonight = coords[:, np.newaxis].transform_to(frame_tonight)
@@ -371,13 +383,16 @@ def create_msb_image(msbs, utdate, semesterdates):
 
 
 
-    # First plot: observability at requested night.
-    ax = fig.add_subplot(121)
 
     for coord, labels in plotdict.values():
         times = np.array([delta_midnight.value]*(len(coord.alt.value))).swapaxes(0,1) * u.hour
         pcoords = coord.alt.value.swapaxes(0,1)
-        ax.plot(times, pcoords)
+
+        lines = ax.plot(times, pcoords)
+
+        if multiproject:
+            for l, c in zip(lines, colors):
+                l.set_color(c)
 
         peak_alts = coord.alt.value.max(axis=1)
         peak_times = delta_midnight.value[coord.alt.value.argmax(axis=1)]
@@ -414,7 +429,10 @@ def create_msb_image(msbs, utdate, semesterdates):
         ax2 = fig.add_subplot(122)
         times=np.array([semtimeshst.datetime]*(len(c.ra.value))).swapaxes(0,1)
         ptransits = transits.swapaxes(0,1)
-        ax2.plot(ptransits, times)
+        lines = ax2.plot(ptransits, times)
+        if multiproject:
+            for l, c in zip(lines, colors):
+                l.set_color(c)
 
         loc=matplotlib.dates.WeekdayLocator(byweekday=1, interval=2)
         ax2.yaxis.set_major_locator(loc)
