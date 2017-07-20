@@ -146,11 +146,54 @@ def web_pages():
                                         blocks=blocks, exclude_done=exclude_done)
 
 
-
+    @app.route('/summary/summary_query', methods=['POST'])
+    def summary_query():
+        print(request.form)
+        semester = request.form.get('semester', None, type=str)
+        if semester:
+            semester = semester.upper()
+        queue = request.form.get('queue', None, type=str)
+        if queue== '':
+            queue = None
+        if queue:
+            queue = queue.upper()
+        patternmatch = request.form.get('patternmatch', None, type=str)
+        if patternmatch == '':
+            patternmatch = None
+        projects = request.form.getlist('projects', type=str)
+        if projects == [] or projects == ['']:
+            projects = None
+        else:
+            projects = set(projects)
+        exclude_projects = request.form.getlist('exclude_projects', type=str)
+        if exclude_projects == [] or exclude_projects == ['']:
+            exclude_projects = None
+        else:
+            exclude_projects = set(exclude_projects)
+        blocks = request.form.get('blocks', 0, type=int)
+        details = request.form.get('details', 0, type=int)
+        exclude_done = request.form.get('exclude_done', 0, type=int)
+        print(details, blocks, exclude_done)
+        fopid = request.form.get('fopid', None, type=str)
+        if fopid:
+            fopid = fopid.upper()
+            projects_fopid = set(ompdb.get_support_projects(fopid, semester))
+            print(projects_fopid)
+            if projects:
+                projects = projects_fopid.intersection(projects)
+            else:
+                projects = projects_fopid
+        if projects:
+            projects = list(projects)
+        if exclude_projects:
+            exclude_projects = list(exclude_projects)
+        return redirect(url_for('summary', semester=semester, queue=queue, patternmatch=patternmatch, proj=projects,
+                                notproj=exclude_projects, blocks=blocks, inprog=exclude_done, details=details))
     @app.route('/summary/chart/<projectid>/')
     def project_chart(projectid):
         summary = ompdb.get_summary_obs_info(str(projectid))
         return prepare_project_chart(projectid, summary)
+
 
     @app.route('/fop')
     def fop():

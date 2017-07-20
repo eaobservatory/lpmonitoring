@@ -268,3 +268,33 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
 </form>
 </div>
 {% endmacro %}
+
+
+{% macro summary_query_form(semester=None, queue=None, patternmatch=None, projects=None, exclude_projects=None,blocks=1, exclude_done=0, details=1) %}
+<div class="form">
+  <h2> Project constraints </h2>
+  <form method="POST" action="{{url_for('summary_query')}}">
+    <label for="semester">Semester</label>
+    <input type="text" name="semester" placeholder="e.g. LAP, 17A" value="{% if semester %}{{semester}}{% endif %}"></br>
+    <label for="queue">Queue</label>
+    <input type="text" name="queue" value="{% if queue %}{{queue}}{% endif %}" placeholder="e.g. PI, EC"><br/>
+    <label for="patternmatch">Pattern</label>
+    <input type="text" name="patternmatch" placeholder="Project pattern" value="{% if patternmatch %}{{patternmatch}}{% endif %}"><br/>
+    <label for="fopid">FoP</label>
+    <input type="text" name="fopid" value="{% if fopid %}{{fopid}}{% endif %}" placeholder="OMP ID, Requires Sem."><br/>
+    <div class="formarea">
+    <label for="projects">Project IDs</label>
+    <textarea rows="3", cols="8" name="projects" placeholder="one per line">{% if projects %}{% for p in projects %}{{p}}</br>{% endfor %}{% endif %}</textarea>
+    </div>
+    <div class="formarea">
+      <label for="exclude_projects">Excluded Projects</label>
+      <textarea rows="3", cols="8" name="exclude_projects" placeholder="one per line">{% if exclude_projects %}{% for p in exclude_projects %}{{p}}</br>{% endfor %}{% endif %}</textarea>
+    </div>
+
+    <label for="details">Show details</label><input type="checkbox" name="details" value="1"></br>
+    <label for="blocks">Show observing blocks</label><input type="checkbox" name="blocks" value="1"></br>
+    <label for="exclude_done">Exclude completed projects<input type="checkbox" name="exclude_done" value="1"></br>
+    <input type="submit" value="Submit"/>
+  </form>
+</div>
+{% endmacro %}

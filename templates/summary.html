@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
-{% from "macros.html" import render_member_info, render_obs_table, project_navbar, project_summary,
-project_header %}
+{% from "macros.html" import project_header, summary_query_form %}
 {% block content %}
 
   <h1> {{fulltitle}} </h1>
 <div class="summary">
+  {{summary_query_form()}}
   <h2> Project list (priority order)</h2>
   <table class="projlist" style="font-size:small">
   {% for p in projects %}
