@@ -243,7 +243,22 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
 
     projects = sorted(ompallocs, key = lambda name: ompallocs[name].priority)
     webinfo['projects'] = projects
-    # Create matplotlib figure.
+
+
+    print('Creating completion pie chart')
+    fig = Figure(figsize=(8,8))
+    fig.patch.set_visible(False)
+    axpie = fig.add_subplot(111)
+
+    allocationspie = np.array([ompallocs[p].allocated for p in projects])
+    observedtimes = np.array([ompallocs[p].allocated - ompallocs[p].remaining for p in projects])
+    axpie = make_completion_summary_piechart(axpie, projects, allocationspie, observedtimes, radius=0.8)
+    fig.tight_layout()
+    canvas = FigureCanvas(fig)
+    img = StringIO.StringIO()
+    canvas.print_png(img)
+    img.seek(0)
+    webinfo['piechart'] = img.getvalue().encode('base64')
 
     print('creating completion charts')
     figs = OrderedDict()
@@ -408,7 +423,7 @@ def prepare_completion_chart(ompdb, semester='LAP', queue=None, patternmatch=Non
 
 
 def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
-                          blocks=False):
+                          blocks=False, piechart=False):
     """
     Create plot showing completion of projects.
 
@@ -541,19 +556,10 @@ def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
 
 
         total = [100 for i in observedtimes]
-        percent_observed = [100*j/allocations[i] if allocations[i] != 0 else np.nan
-                            for i,j  in enumerate(observedtimes) ]
+        percent_observed = np.array([100*j/allocations[i] if allocations[i] != 0 else np.nan
+                            for i,j  in enumerate(observedtimes) ])
 
-        # Plot a bar for each project.
-        ax2.barh([i+0.05 for i in range(len(projects))], total, label='allocated',
-                 alpha=0.3, color=[colordict[p] for p in projects],
-                 edgecolor='white', height=0.9)
-
-        ax2.barh([i+0.05 for i in range(len(projects))],percent_observed, label='observed',
-                 alpha=1.0, color=[colordict[p] for p in projects], edgecolor='white',
-                 height=0.9)
-
-        # Label each bar
+        labels = []
         for i in range(len(projects)):
             enabled = bool(ompallocs[projects[i]].enabled)
             if not enabled:
@@ -566,24 +572,45 @@ def make_completion_chart(ompdb, fig, projects, ompallocations, timecharged,
                 percent = 100 * hourspent/allochrs
             else:
                 percent = np.nan
-            textstring = symbol + ' {} {:.1F}/{:.1F} ({:.3G}%)'.format(projects[i],
+            textstring = symbol + ' {}: {:.1F}/{:.1F} ({:.3G}%)'.format(projects[i],
                                                                            hourspent, allochrs,
                                                                            percent)#, ompallocs[projects[i]].title)
-            ax2.text(5, i-0.2, textstring,
-                     color='black', ha='left', alpha=1.0, va='top', weight='bold', size='medium')
-            ax2.text(5, i+0.4, ompallocs[projects[i]].title,
-                     color='black', ha='left', alpha=1.0, va='bottom', size='small')
-        ax.text(0.1, 0.9, 'Completion as of ' + currdate, transform=ax.transAxes)
+            labels.append(textstring)
+
+        if piechart:
+            projlabels = [i.split(':')[0].strip() for i in labels]
+            ax2 = make_completion_summary_piechart(ax2, projects, allocations, observedtimes,
+                                                   projectlabels=projlabels, radius=0.8, percentages=True)
+
+        else:
+            # Plot a bar for each project.
+            ax2.barh([i+0.05 for i in range(len(projects))], total, label='allocated',
+                     alpha=0.3, color=[colordict[p] for p in projects],
+                     edgecolor='white', height=0.9)
+
+            ax2.barh([i+0.05 for i in range(len(projects))],percent_observed, label='observed',
+                     alpha=1.0, color=[colordict[p] for p in projects], edgecolor='white',
+                     height=0.9)
+
+            # Label each bar.
+            #labels = []
+
+            for i in range(len(projects)):
+                textstring = labels[i]
+                ax2.text(5, i-0.2, textstring,
+                         color='black', ha='left', alpha=1.0, va='top', weight='bold', size='medium')
+                ax2.text(5, i+0.4, ompallocs[projects[i]].title,
+                         color='black', ha='left', alpha=1.0, va='bottom', size='small')
+            ax.text(0.1, 0.9, 'Completion as of ' + currdate, transform=ax.transAxes)
 
 
-        # Finish up plot
-        ax2.set_axis_off()
-        ax2.invert_yaxis()
+            # Finish up plot
+            ax2.set_axis_off()
+            ax2.invert_yaxis()
 
     fig.autofmt_xdate()
 
     if (number_plots > 1):
-        print('ticking top of first plot')
         ax = fig.axes[0]
         ax.tick_params(axis='x', which='major', top='on', bottom='on')
         ax.tick_params(axis='x', which='major',labeltop='on', labelbottom=False)
@@ -679,3 +706,88 @@ def create_project_chart(project, summary, allocdict=None):
     canvas.print_png(img)
     img.seek(0)
     return img
+
+
+
+def make_completion_summary_piechart(ax, projects, allocations, observedtimes, projectlabels=None,
+                                     colors=None, cmap='viridis_r',
+                                     radius=1.0, percentages=None, radial_labels=True, scale=1.5):
+
+    # Label with projects if no specific project labels.
+    if not projectlabels:
+        projectlabels = projects
+
+    if colors is None:
+        cmap = matplotlib.cm.get_cmap(cmap)
+        colors = cmap(np.linspace(0., 1., int(scale*len(projects))))
+        lower = int(np.floor(0.5*(int(scale*len(projects)) -len(projects))))
+        colors = colors[lower:lower+len(projects)]
+
+    percent_observed = 100 * np.array(observedtimes)/np.array(allocations)
+
+
+
+    wedges1, texts, autolabels = ax.pie(allocations, labels=projectlabels,
+                                         autopct='%.1F', startangle=90.0, counterclock=False,
+                                         labeldistance=1.1, pctdistance=0.8*radius, radius=radius, colors=colors)
+    wedges2, _ = ax.pie(allocations, startangle=90.0, counterclock=False, radius=radius)
+
+    # Go through wedges, set color, alpha and size appropriately.
+    for i in range(len(projects)):
+        color = wedges1[i].get_facecolor()
+        #texts[i].set_color(color)
+        if percentages:
+            autolabels[i].set_text('{:.1F}%'.format(percent_observed[i]))
+        else:
+            autolabels[i].set_visible(False)
+
+        wedges1[i].set_alpha(0.2)
+        wedges2[i].set_facecolor(color)
+        # Set radius so that fraction of area filled in is proportional to copmletion
+        wedges2[i].set_radius(radius*np.sqrt(percent_observed[i]/100.0))
+
+    # Add a vertical black line at start, and an arrow indicating priority order.
+    lines = ax.plot([0,0], [0,1.05*radius], color='black', linewidth=2.0)
+    posA = (0, 1.05*radius)
+    posB =(1.05*radius * np.cos(np.deg2rad(90 - 10.0)), 1.05*radius*np.sin(np.deg2rad(90 - 10.0)))
+    arr = ax.annotate('', xy=posB, xycoords='data', xytext=posA, textcoords='data',
+                          arrowprops=dict(arrowstyle="simple", fc='black', ec="none",
+                                          connectionstyle="arc3, rad=-0.1"))
+
+    # Pie charts should be circular!
+    ax.set_aspect('equal')
+
+    # Ensure labels are pointing outwards.
+    if radial_labels:
+        for t, a in zip(texts, autolabels):
+            position = t.get_position()
+            angle = np.rad2deg(np.arctan(position[1]/position[0]))
+            if position[0] > 0 and position[1] < 0:
+                t.set_ha('left')
+                t.set_va('baseline')
+            if position[0] > 0 and position[1] > 0:
+                t.set_ha('left')
+                t.set_va('bottom')
+            if position[0] < 0 and position[1] < 0:
+                t.set_ha('right')
+                t.set_va('baseline')
+            if position[0] < 0 and position[1] > 0:
+                t.set_ha('right')
+                t.set_va('bottom')
+            if angle > 90:
+                angle += 180
+            elif angle < -90:
+                angle += 180
+            t.set_rotation(angle)
+            a.set_rotation(angle)
+
+    for t, a in zip(texts, autolabels):
+        t.set_size('small')
+        a.set_size('small')
+
+    # Add faint black lines around the patches
+    for w in ax.patches:
+        w.set_edgecolor((0.0,0.0,0.0,0.5))
+        w.set_linewidth(1.0)
+
+    return ax
