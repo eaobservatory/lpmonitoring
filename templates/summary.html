@@ -167,6 +167,16 @@
     {% endif %}
     </div>
   </div>
+
 {% endfor %}
 {% endif %}
+  {% if msbfigs %}
+  <div class="panel">
+    <h2>MSB plots</h2>
+    {% for fig in msbfigs %}
+    <img src="data:image/png;base64,{{fig}}"/>
+    {% endfor %}
+  </div>
+  {% endif %}
+
 {% endblock %}

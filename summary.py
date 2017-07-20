@@ -33,9 +33,14 @@ from flask import send_file
 from omp.db.db import OMPDB
 from omp.siteconfig import get_omp_siteconfig
 from omp.obs.state import OMPState
+from project import create_msb_image
 
 # Object to hold info about a project
 ProgInfo = namedtuple('ProgInfo', 'projectid name info instruments url color allocdict')
+MsbCustomInfo = namedtuple('MSBCustomInfo', 'project instrument target coordstype ra2000 dec2000 remaining timeest taumin taumax')
+
+
+
 
 class Bands:
     """ class for weather info"""
@@ -44,6 +49,36 @@ class Bands:
     BAND3 = [0.08, 0.12]
     BAND4 = [0.12, 0.2]
     BAND5 = [0.2, 100]
+
+    @classmethod
+    def get_band(self, tau):
+        """ Return the band a given tau is in."""
+        if tau < self.BAND1[1]:
+            return 1
+        elif tau < self.BAND2[1]:
+            return 2
+        elif tau < self.BAND3[1]:
+            return 3
+        elif tau < self.BAND4[1]:
+            return 4
+        elif tau >= self.BAND5[0]:
+            return 5
+        else:
+            return np.nan
+    @classmethod
+    def get_fromname(self, name):
+        if int(name) == 1:
+            return self.BAND1
+        elif int(name) == 2:
+            return self.BAND2
+        elif int(name) == 3:
+            return self.BAND3
+        elif int(name) == 4:
+            return self.BAND4
+        elif int(name) == 5:
+            return self.BAND5
+        else:
+            return 'unknown'
 
 
 faultstatus = {
@@ -306,6 +341,62 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
         webinfo['projectfigs'] = projectfigs
     else:
         webinfo['projectfigs'] = {}
+
+
+    if allprojectmsb:
+        msbinfo = ompdb.get_summary_msb_info_group(projects=projects)
+        # Remove all msbs where there is no time left in the project.
+        msbinfo = [i for i in msbinfo if (i.project in ompallocs and ompallocs[i.project].remaining > 0)]
+        remainingmsbs = {}
+        for p in msbinfo:
+            remainingmsbs[p.project] = ompdb.get_remaining_msb_info(p.project)
+
+        fullmsblist = []
+        fullmsbdict = {}
+        for p in remainingmsbs:
+            projmsblist = []
+            for m in remainingmsbs[p]:
+                if m.pol == 1:
+                    instrument = m.instrument + '-POL'
+                else:
+                    instrument = m.instrument
+                taumin = max(m.taumin, ompallocs[p].taumin)
+                taumax = min(m.taumax, ompallocs[p].taumax)
+                msb = MsbCustomInfo(p, instrument, m.target, m.coordstype, m.ra2000, m.dec2000,
+                                    m.remaining, m.timeest, taumin, taumax)
+                fullmsblist.append(msb)
+                projmsblist.append(msb)
+            fullmsbdict[p] = projmsblist
+
+        # Have to replace tau with actually available tau: set of allocation and msb setting
+        instruments = set(i.instrument for i in fullmsblist)
+        bdict = {}
+        # Get all observations for given band
+        bdict['1'] = [i for i in fullmsblist if i.taumin < Bands.BAND1[1]]
+        bdict['2'] = [i for i in fullmsblist if (i.taumin < Bands.BAND2[1] and  i.taumax >= Bands.BAND2[0])]
+        bdict['3'] = [i for i in fullmsblist if (i.taumin < Bands.BAND3[1] and i.taumin >= Bands.BAND3[0])]
+        bdict['4'] = [i for i in fullmsblist if (i.taumin < Bands.BAND4[1] and i.taumin >= Bands.BAND4[0])]
+        bdict['5'] = [i for i in fullmsblist if i.taumin >= Bands.BAND5[0]]
+        bdict['extra'] = [i for i in fullmsblist if i not in bdict['1'] + bdict['2'] + bdict['3']+bdict['4'] + bdict['5']]
+        print(bdict['extra'])
+        weatherfigs = []
+        for band in ['1','2','3','4','5','extra']:
+            for instrument in instruments:
+                msbs = [i for i in bdict[band] if i.instrument == instrument]
+                if msbs:
+                    fig = create_msb_image(msbs, utdate=datetime.date.today(),
+                                           semesterdates=[datetime.date.today(),
+                                                          datetime.date.today() + datetime.timedelta(days=6*31)],
+                                           multiproject=True)
+                    fig.suptitle('Band {}: {}'.format(band, instrument))
+                    canvas = FigureCanvas(fig)
+                    img = StringIO.StringIO()
+                    canvas.print_png(img)
+                    img.seek(0)
+                    weatherfigs.append(img.getvalue().encode('base64'))
+        webinfo['msbfigs']=weatherfigs
+
+
 
     return webinfo
 
