@@ -217,7 +217,7 @@ def web_pages():
     def fop_listing(fopuname, semester):
         fopuname = str(fopuname).upper()
         semester = str(semester).upper()
-        projects = ompdb.get_support_projects('', fopuname, semester)
+        projects = ompdb.get_support_projects(fopuname, semester)
         summarydict = {}
         for p in projects:
             projinfo = ompdb.get_project_info(p)
