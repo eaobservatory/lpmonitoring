@@ -517,3 +517,21 @@ img.weathercompletion {
 td.total{
     font-weight: bold;
 }
+
+
+div.form{
+    text-align:right;
+}
+div.formarea{
+    text-align:right;
+}
+
+div.formarea textarea{
+    width:12em;
+    height:4em;
+}
+
+
+div.piecharts, div.overallsummary {
+    background-color:white;
+}
