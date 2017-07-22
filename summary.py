@@ -339,15 +339,22 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
 
 
     if details:
+        unknown_observations = {}
         print('creating project weatherband plots')
         projectfigs = {}
         for proj in projects:
             summary = [i for i in summinfo if i.project==proj]
+            summary_unknown = [i for i in summary if i.band == 'unknown']
+            if summary_unknown:
+                unknown_observations[proj] = summary_unknown
+            summary = [i  for i in summary if i.band != 'unknown']
             if summary != []:
                 allocdict = allocations.get(proj, None)
                 img = create_project_chart(proj, summary, allocdict=allocdict)
                 projectfigs[proj] = img.getvalue().encode('base64')
         webinfo['projectfigs'] = projectfigs
+        webinfo['unknownwvmobs'] = unknown_observations
+
     else:
         webinfo['projectfigs'] = {}
 

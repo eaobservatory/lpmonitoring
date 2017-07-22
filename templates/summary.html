@@ -106,6 +106,16 @@
           {{' %.2F '%  projdict[p].unconfirmed| float}} hrs unconfirmed for this project.
         </div>
         {% endif %}
+        {% if p in unknownwvmobs %}
+        <div class="warning">
+          <p> Some observations don't have a known JCMT WVM</p>
+          <ul>
+            {% for i in unknownwvmobs[p] %}
+            <li>{{i.number}} observations ({{'%.2F'%(i.totaltime/(60.0*60.0))}} hrs) in status {{i.status | ompstatus}} at {{i.daynight}}.</li>
+            {% endfor %}
+          </ul>
+          </div>
+        {% endif %}
       </div>
 
       <div id="msbs" class="panel-small">
