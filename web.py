@@ -408,6 +408,9 @@ def web_pages():
 
         else:
             return 'UNKNOWN'
+    @app.template_filter('unicode')
+    def unicode_string(thestring):
+        return unicode(thestring, 'utf-8')
 
     @app.context_processor
     def add_to_context():

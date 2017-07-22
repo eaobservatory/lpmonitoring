@@ -84,7 +84,7 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
 {% if comment.datetime %}<br/>
 <span class="date">{{comment.datetime}}</span>
 {% endif %}
-{% if comment.text is notwhitespace %}<br/><span class="comment">{{comment.text}}</span>
+{% if comment.text is notwhitespace %}<br/><span class="comment">{{comment.text|unicode}}</span>
 {% endif %}
 {% endmacro %}
 
