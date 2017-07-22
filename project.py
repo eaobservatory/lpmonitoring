@@ -420,7 +420,7 @@ def create_msb_image(msbs, utdate, semesterdates, multiproject=False):
         c=c[:, np.newaxis]
 
         semtimeshst  = semtimes - utcoffset
-        transits = (24 - (semtimeshst.sidereal_time('mean', longitude=jcmt.longitude).value  - c.ra.hourangle )) % 24
+        transits = (24 - (semtimeshst.sidereal_time('mean', longitude=jcmt.lon).value  - c.ra.hourangle )) % 24
         transits[ transits > 12] -= 24
         # Prevent wrapping
         for i in transits:
