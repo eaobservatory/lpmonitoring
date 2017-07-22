@@ -328,6 +328,23 @@ def web_pages():
     @app.template_filter('projenc')
     def encode_project_string(projectid):
         return projectid.replace('/','-')
+
+
+    @app.template_filter('formatcoords')
+    def formatcoords(coord, coordtype, index):
+        if coordtype=='RADEC':
+            if index == 0:
+                return ra_to_str(coord)
+            if index == 1:
+                return dec_to_str(coord)
+        elif coordtype in ['PLANET','CAL','TBD']:
+            return coord
+        else:
+            if not coord:
+                return coord
+            else:
+                return '{:.2f}'.format(coord)
+
     @app.template_filter('ratostr')
     def ra_to_str(ra):
         """

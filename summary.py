@@ -37,7 +37,7 @@ from project import create_msb_image
 
 # Object to hold info about a project
 ProgInfo = namedtuple('ProgInfo', 'projectid name info instruments url color allocdict')
-MsbCustomInfo = namedtuple('MSBCustomInfo', 'project instrument target coordstype ra2000 dec2000 remaining timeest taumin taumax')
+MsbCustomInfo = namedtuple('MSBCustomInfo', 'project instrument target title coordstype ra2000 dec2000 remaining timeest taumin taumax wavelength')
 
 
 
@@ -211,8 +211,10 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
     webinfo['ompallocations'] = ompallocs
     webinfo['timecharged'] = timecharged
 
+    # msbinfo needs to be gotten either for details==True or for
+    # allprojectmsbs==True. Don't want to do it twice though.
+    msbinfo = None
     if details:
-        webinfo['details'] = True
         summinfo = ompdb.get_summary_obs_info_group(projects=projects)
         end3 = datetime.datetime.now()
 
@@ -351,13 +353,18 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
 
 
     if allprojectmsb:
-        msbinfo = ompdb.get_summary_msb_info_group(projects=projects)
+
+        #If we already got msbinfo earlier don't redo the query.
+        if not msbinfo:
+            msbinfo = ompdb.get_summary_msb_info_group(projects=projects)
+
         # Remove all msbs where there is no time left in the project.
         msbinfo = [i for i in msbinfo if (i.project in ompallocs and ompallocs[i.project].remaining > 0)]
         remainingmsbs = {}
         for p in msbinfo:
             remainingmsbs[p.project] = ompdb.get_remaining_msb_info(p.project)
 
+        # Mangle the msbinformation into a useful form.
         fullmsblist = []
         fullmsbdict = {}
         for p in remainingmsbs:
@@ -369,8 +376,11 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
                     instrument = m.instrument
                 taumin = max(m.taumin, ompallocs[p].taumin)
                 taumax = min(m.taumax, ompallocs[p].taumax)
-                msb = MsbCustomInfo(p, instrument, m.target, m.coordstype, m.ra2000, m.dec2000,
-                                    m.remaining, m.timeest, taumin, taumax)
+                # Tau values that are clearly meant to be in the range are not quite there...
+                taumin = float('{:.2f}'.format(taumin))
+                taumax = float('{:.2f}'.format(taumax))
+                msb = MsbCustomInfo(p, instrument, m.target, m.title, m.coordstype, m.ra2000, m.dec2000,
+                                    m.remaining, m.timeest, taumin, taumax, m.wavelength)
                 fullmsblist.append(msb)
                 projmsblist.append(msb)
             fullmsbdict[p] = projmsblist
@@ -380,14 +390,17 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
         bdict = {}
         # Get all observations for given band
         bdict['1'] = [i for i in fullmsblist if i.taumin < Bands.BAND1[1]]
-        bdict['2'] = [i for i in fullmsblist if (i.taumin < Bands.BAND2[1] and  i.taumax >= Bands.BAND2[0])]
-        bdict['3'] = [i for i in fullmsblist if (i.taumin < Bands.BAND3[1] and i.taumin >= Bands.BAND3[0])]
-        bdict['4'] = [i for i in fullmsblist if (i.taumin < Bands.BAND4[1] and i.taumin >= Bands.BAND4[0])]
-        bdict['5'] = [i for i in fullmsblist if i.taumin >= Bands.BAND5[0]]
+        bdict['2'] = [i for i in fullmsblist if (i.taumin < Bands.BAND2[1] and  i.taumax > Bands.BAND2[0])]
+        bdict['3'] = [i for i in fullmsblist if (i.taumin < Bands.BAND3[1] and i.taumax > Bands.BAND3[0])]
+        bdict['4'] = [i for i in fullmsblist if (i.taumin < Bands.BAND4[1] and i.taumax > Bands.BAND4[0])]
+        bdict['5'] = [i for i in fullmsblist if i.taumax > Bands.BAND5[0]]
         bdict['extra'] = [i for i in fullmsblist if i not in bdict['1'] + bdict['2'] + bdict['3']+bdict['4'] + bdict['5']]
-        print(bdict['extra'])
-        weatherfigs = []
+        webinfo['msbs'] = bdict
+
+        # Create images.
+        weatherfigs = {}
         for band in ['1','2','3','4','5','extra']:
+            weatherfigs[band] = {}
             for instrument in instruments:
                 msbs = [i for i in bdict[band] if i.instrument == instrument]
                 if msbs:
@@ -395,12 +408,19 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
                                            semesterdates=[datetime.date.today(),
                                                           datetime.date.today() + datetime.timedelta(days=6*31)],
                                            multiproject=True)
-                    fig.suptitle('Band {}: {}'.format(band, instrument))
+                    #fig.suptitle('Band {}: {}'.format(band, instrument))
                     canvas = FigureCanvas(fig)
                     img = StringIO.StringIO()
                     canvas.print_png(img)
                     img.seek(0)
-                    weatherfigs.append(img.getvalue().encode('base64'))
+                    figureobject = img.getvalue().encode('base64')
+                    weatherfigs[band][instrument] = figureobject
+
+            # If there are no values, remove.
+            if set(weatherfigs[band].values()) == set([None]):
+                print(band)
+                weatherfigs[band] = None
+
         webinfo['msbfigs']=weatherfigs
 
 

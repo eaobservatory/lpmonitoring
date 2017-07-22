@@ -305,3 +305,54 @@ There are <b>{{ msbfullinfo|length }}</b> unique msbs in the database, with a to
   </form>
 </div>
 {% endmacro %}
+
+
+{% macro msbtable(msbs, project=True, instrument=False, priority=False) %}
+
+  <tr>
+    {% if project %}
+    <th>Project</th>
+    {% endif %}
+    {% if instrument %}
+    <th>Instrument</th>
+    {% endif %}
+    <th>Target</th>
+    <th>Coords<br/>Type</th>
+    <th>X</th>
+    <th>Y</th>
+    <th>&#964;<br/>min</th>
+    <th>&#964;<br/>max</th>
+    <th>Freq<br/>GHz</th>
+    <th>Reps</th>
+    <th>Time<br/>hrs</th>
+    {% if priority %}
+    <th>Priority</th>
+    {% endif %}
+  </tr>
+  {% for msb in msbs %}
+  <tr>
+    {% if project %}
+    <td>{{msb.project}}</td>
+    {% endif %}
+    {% if instrument %}
+    <td>{{msb.instrument}}</td>
+    {% endif %}
+    <td title="{{msb.title}}">{{msb.target}}</td>
+    <td>{{msb.coordstype}}</td>
+    <td>{{msb.ra2000 | formatcoords(msb.coordstype, 0)}}</td>
+    <td>{{msb.dec2000 | formatcoords(msb.coordstype, 1)}}</td>
+    <td>{{msb.taumin}}</td>
+    <td>{{msb.taumax}}</td>
+    {% if msb.wavelength %}
+    <td>{{'%.3F' %(300000.0/msb.wavelength)}}</td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    <td>{{msb.remaining}}</td>
+    <td>{{'%.2F' % (msb.remaining * msb.timeest/(60.0*60.0))}}</td>
+    {% if priority %}
+    <td>{{msb.priority}}</td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+{% endmacro %} 

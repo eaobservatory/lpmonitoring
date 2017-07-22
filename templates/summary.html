@@ -1,5 +1,12 @@
 {% extends 'layout.html' %}
-{% from "macros.html" import project_header, summary_query_form %}
+{% from "macros.html" import project_header, summary_query_form, msbtable %}
+
+{% block extrahead %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.css"/>
+     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/b-1.2.2/b-colvis-1.2.2/b-html5-1.2.2/b-print-1.2.2/cr-1.3.2/fh-3.1.2/se-1.2.0/datatables.min.js"></script>
+    <script type="text/javascript" src="/static/most.js"></script>
+
+{% endblock %}
 {% block content %}
 
   <h1> {{fulltitle}} </h1>
@@ -175,11 +182,50 @@
 {% endif %}
   {% if msbfigs %}
   <div class="panel">
+    <h2>MSB information</h2>
+    <p> Please note that moving-target MSBs won't be included in the
+    observability charts below. They should however be shown in the
+    tables of msbs.</p>
+
+    {% if 'extra' in msbs and msbs['extra']%}
+    <p>Warning: the following msbs weren't correctly categorised into
+    a weather band and are not included in the charts/tables below.
+      </br>
+    {{msbs['extra']}}
+    <p>
+    {% endif %}
+    {% set weatherbands = ['1', '2', '3', '4', '5'] %}
+    <ul>
+      {% for weatherband in weatherbands %}
+      {% if msbfigs[weatherband] %}
+      <li><a href="#msbplot-{{weatherband}}">Band {{weatherband}}: Msbs for {{msbfigs[weatherband].keys()|sort|join(', ')}}</a></li>
+      {% else %}
+      <li>Band {{weatherband}}: No msbs</li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+
     <h2>MSB plots</h2>
-    {% for fig in msbfigs %}
-    <img src="data:image/png;base64,{{fig}}"/>
+    {% for weatherband in weatherbands %}
+      {% if msbfigs[weatherband] %}
+      <div class="band panel hideshow">
+        <h3 class="hideshow" id="msbplot-{{weatherband}}">Weather Band {{weatherband}} (click to hide/show)</h3>
+        <div id="table-msbplot-{{weatherband}}">
+          {% for instrument in msbfigs[weatherband] %}
+          <h4 id="msbplot-{{weatherband}}-{{instrument}}">{{instrument}}</h4>
+          <img src="data:image/png;base64,{{msbfigs[weatherband][instrument]}}"/>
+          {% endfor %}
+            <h4 class="hideshow" id="msbtable-{{weatherband}}">MSB Table: click to hide/show</h4>
+            <table id="table-msbtable-{{weatherband}}">
+              {{msbtable(msbs[weatherband], instrument=True)}}
+            </table>
+        </div>
+      </div>
+      {% endif %}
+
     {% endfor %}
   </div>
+
   {% endif %}
 
 {% endblock %}
