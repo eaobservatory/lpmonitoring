@@ -59,7 +59,7 @@ def web_pages():
     # Setup root page to redirect to summary
     @app.route('/')
     def home_page():
-        return redirect(url_for('summary', semester='LAP', inprog=0), code=303)
+        return redirect(url_for('summary', semester='LAP', inprog=0, details=0), code=303)
 
     @app.route('/project/<projectid>/observations')
     def observation(projectid):
