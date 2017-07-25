@@ -283,8 +283,8 @@ def prepare_project_page(ompdb, jsaprocdb, projectid, observations=False):
     #project_chart = prepare_project_chart(projectid, obssummary)
     project_chart=None
     fig = create_msb_image(msbfullinfo, datetime.date.today(),
-                     (datetime.datetime.strptime('2016-08-01', '%Y-%m-%d').date(),
-                      datetime.datetime.strptime('2017-02-01', '%Y-%m-%d').date()))
+                           (datetime.date.today(),
+                            datetime.date.today() + datetime.timedelta(days=6*31)))
     canvas = FigureCanvas(fig)
     msbimg= BytesIO()
     canvas.print_png(msbimg)
