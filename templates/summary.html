@@ -32,7 +32,7 @@
   </table>
 </div>
 <div class="summarychart">
-  <h2> Completion chart</h2>
+  <h2> Completion chart: {{'%.1f%% complete (%.1f / %.1f hrs)'%(100*overallobserved_hrs/overallallocation_hrs, overallobserved_hrs, overallallocation_hrs)}}</h2>
   <img style="width:35em" src="data:img/png;base64,{{piechart}}"/>
   {% for f in figs %}
   <a href="{{f}}"><img src="data:image/png;base64,{{figs[f]}}"/></a>

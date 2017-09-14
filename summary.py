@@ -199,6 +199,17 @@ def create_summary(ompdb, semester='LAP', queue=None, patternmatch=None, project
 
     timecharged = ompdb.get_time_charged_group(projects=projects, telescope='JCMT')
 
+    # Get the overall completion of this set of projects
+    overallallocation = 0
+    overallobserved = 0
+    for p in projects:
+        allocation = ompallocs[p].allocated
+        observed = (allocation - ompallocs[p].remaining) + ompallocs[p].pending
+        overallallocation += allocation
+        overallobserved += observed
+    webinfo['overallallocation_hrs'] = overallallocation/(60.0*60.0)
+    webinfo['overallobserved_hrs'] = overallobserved/(60.0*60.0)
+
     projsum = namedtuple('projsum',
         'summary msbs faults number_observations time_observations charged unconfirmed allocation percentcomplete')
 
